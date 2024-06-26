@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: MongoDB v6.0.13 - Ubuntu 18.04 (x64)</Title>
+		<Description><![CDATA[
+<div>
+  This Fixlet
+  will download and
+  update
+
+  "MongoDB v6.0.13" onto selected endpoints.
+  <br /><br /><b>Download Size:</b> 51979500
+
+  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+</div>]]></Description>
+		<Relevance>((exists match (regex "Ubuntu( Server|)( LTS|) (18.04)") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists package "mongodb-org" of debianpackages]]></Relevance>
+
+				<Relevance><![CDATA[not exists package "mongodb-org" whose (version of it >= "6.0.13") of debianpackages]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>51979500</DownloadSize>
+		<Source>MongoDB</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-01-18</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"6.0.13","size":51979500 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp MongoDB</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:mongodb:mongodb:6.0.13:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Tue, 06 Feb 2024 21:36:59 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  Community Edition v6.0.13.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch mongodb-database-tools_100._ubuntu_bionic.x86_64.deb sha1:8b7b7de17ff9fb77895f93a971a6231097625a8d size:51979500 https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/6.0/multiverse/binary-amd64/mongodb-database-tools_100.9.4_amd64.deb sha256:0f5a6d1859d6f1344de3c961992dba432e398ce93b3d0e08e9d317b327183a1e
+prefetch mongodb-mongosh__ubuntu_bionic.x86_64.deb sha1:1879c57423f0c05d1c2735741a02a712793d3f5a size:48671712 https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/6.0/multiverse/binary-amd64/mongodb-mongosh_2.1.3_amd64.deb sha256:fe74fb0b40758e1e66c03197e2a2009eb9ebae743b0668b4917d00d513011a8f
+prefetch mongodb-org-tools__ubuntu_bionic.x86_64.deb sha1:70d6ba6dffd114ef25021d78ff523b0a0fc973a1 size:2896 https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/6.0/multiverse/binary-amd64/mongodb-org-tools_6.0.13_amd64.deb sha256:c008a7695ca2de97d3468f19afaf1010ca3ecc0d551cd68f62eb83dea275d8c7
+prefetch mongodb-org__ubuntu_bionic.x86_64.deb sha1:af991683672780c9aa5534b57646b55fbe799302 size:2932 https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/6.0/multiverse/binary-amd64/mongodb-org_6.0.13_amd64.deb sha256:6206874ce9e92897f78f4e2eb456e0fc12e8cd8045bc1527d753bc0b9b47e7d0
+prefetch mongodb-org-database__ubuntu_bionic.x86_64.deb sha1:464f5f13e023c8905626751df58272c8298d67b6 size:3540 https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/6.0/multiverse/binary-amd64/mongodb-org-database_6.0.13_amd64.deb sha256:1db743f548e2928357b8aff211867beb9b524d7b074e1048b198925f7af8f06b
+prefetch mongodb-org-database-tools-extra__ubuntu_bionic.x86_64.deb sha1:3fde72ee7d5eb9db5aed5178519a9bcb62bf5221 size:7756 https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/6.0/multiverse/binary-amd64/mongodb-org-database-tools-extra_6.0.13_amd64.deb sha256:b1dd4eec1beca2bbaed8c594a4b72f9bc1115655b44932e4a2910412cc6e54c4
+prefetch mongodb-org-mongos__ubuntu_bionic.x86_64.deb sha1:655a895ea84d0ddcfed462570a44904c13ee6d1a size:20563336 https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/6.0/multiverse/binary-amd64/mongodb-org-mongos_6.0.13_amd64.deb sha256:313b3fb4ec7c185c5e3575c43e0eae954b328fa8ebef761e11c34f4d5c7033d1
+prefetch mongodb-org-server__ubuntu_bionic.x86_64.deb sha1:98ab01679af44d951b2220102747310f6f7a76b1 size:29142204 https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/6.0/multiverse/binary-amd64/mongodb-org-server_6.0.13_amd64.deb sha256:26444b5d431c33a2c9064b9aa3652413138c00debb95bc8535ce377a516b70b2
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1098/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) bionic") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mongodb*rpm
+continue if {exit code of action = 0}
+
+
+elseif {((exists match (regex "SuSE.* (bionic)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mongodb*rpm
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) (18.04)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mongodb*deb
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

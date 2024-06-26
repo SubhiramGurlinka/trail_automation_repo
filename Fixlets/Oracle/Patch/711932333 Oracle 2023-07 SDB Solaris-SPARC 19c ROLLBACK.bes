@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Task>
+		<Title>OracleDB 19c on Solaris-SPARC - 2023-07 Rollback</Title>
+		<Description><![CDATA[<P><FONT color=#0000ff size=2>Oracle standalone DB 19c <STRONG>Rollback</STRONG> for 2023-07</FONT></P>
+<P>This fixlet performs the following operations (if any of the operations fail, the rollback will stop to let you fix the problem and re-run the fixlet):</P>
+<OL>
+<LI>Stops the Oracle 19c listeners and databases.
+<LI>Rolls back the 35354406 OJVM binary patch and database patch.
+<LI>Rolls back the 35320081 PSU binary patch and database patch.
+<LI>Restarts the databases and listeners. </LI></OL>
+<P>THE 'UPDATE ORACLE PATCH LIST' TASK MUST BE DEPLOYED PRIOR TO DEPLOYING THIS FIXLET.</FONT></P>
+<P>If the action fails, the exit code will show the number of databases which failed the rollback.</P>
+<P><FONT color=#ff0000><STRONG>IMPORTANT:</STRONG>  Check the properties in the <STRONG>Oracle Patch Results</STRONG> analysis to see specifics if the fixlet action fails.  Detailed logs can be found in the /var/opt/BESClient/ORACLE folder.</FONT></P></FONT>]]></Description>
+		<Relevance>name of operating system starts with "SunOS"</Relevance>
+    <Relevance>architecture of operating system starts with "sparc"</Relevance>
+		<Relevance>exists file "SIDLIST.txt" whose (exists line whose (it does not start with "+ASM" and it contains ":19.0.0.0:") of it) of folder "ORACLE" of parent folder of data folder of client</Relevance>
+		<Relevance>exists file "SIDLIST.txt" whose (exists line whose (it contains ":19.0.0.0:" and it contains ":2023-07") of it) of folder "ORACLE" of parent folder of data folder of client</Relevance>
+		<Category>Database</Category>
+		<DownloadSize>0</DownloadSize>
+		<Source>Oracle</Source>
+		<SourceID>p35370174</SourceID>
+		<SourceReleaseDate>2023-07-15</SourceReleaseDate>
+		<SourceSeverity>Unspecified</SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 01 Apr 2024 12:00:00 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+parameter "ODIR"="{ pathname of folder "ORACLE" of parent folder of data folder of client }"
+parameter "BASE"="{ (if it != "" then it else ((parameter "ODIR") & "/patchfiles")) of ((value of setting "ORACLE_PATCH_FOLDER" of client)|"") }"
+
+// Capture local settings for scripts
+createfile until _EOF_
+PATCHID="35370174"
+PATCHPSU="35320081"
+PATCHJVM="35354406"
+OPATCHVER="12.2.0.1.42"
+BASEFOLDER="{parameter "BASE"}"
+OUTFOLDER="{parameter "ODIR"}"
+SKIP_PRECHECK="{ (value of setting "ORACLE_SKIP_PRECHECK" of client)|"0" }"
+ALLOW_CONFLICTS="{ (value of setting "ORACLE_ALLOW_CONFLICTS" of client)|"0" }"
+ALLOW_INVALIDS="{ (value of setting "ORACLE_ALLOW_INVALIDS" of client)|"0" }"
+ORACLE_BACKUP="{ (value of setting "ORACLE_BACKUP_FOLDER" of client)|"" }"
+_EOF_
+delete "{parameter "ODIR"}/INCLUDE-19.0.0.0.sh"
+move __createfile "{parameter "ODIR"}/INCLUDE-19.0.0.0.sh"
+wait chmod 755 "{parameter "ODIR"}/INCLUDE-19.0.0.0.sh"
+
+// Pre-create the rollback log and make it accessible to all users
+wait bash -c "touch {parameter "ODIR"}/ROLLBACK-19.0.0.0.log ; chmod 766 {parameter "ODIR"}/ROLLBACK-19.0.0.0.log"
+
+// Run the rollback script and capture its exit code
+wait bash -c "export ORACLE_VER=19.0.0.0; {parameter "ODIR"}/ROLLBACK.sh > {parameter "ODIR"}/ROLLBACK-19.0.0.0.log 2>&1"
+parameter "exitcode"="{ exit code of action }"
+wait bash -c "chmod 766 {parameter "ODIR"}/*.log"
+
+// Rotate the log and write the operation status to a file for reporting
+wait bash -c "{parameter "ODIR"}/LOGROTATE.sh 180 ROLLBACK-19.0.0.0"
+wait bash -c "{parameter "ODIR"}/STATUS.sh 19.0.0.0 2023-07 ROLLBACK {parameter "exitcode"}"
+wait bash -c "{parameter "ODIR"}/UPDATE.sh > {parameter "ODIR"}/UPDATE.log 2>&1"
+wait bash -c "chmod 766 {parameter "ODIR"}/*.log"
+
+// Set the action exit code and fail the action if the exit code isn't zero
+if { parameter "exitcode" != "0" }
+  exit {parameter "exitcode"}
+endif
+exit {parameter "exitcode"}
+]]></ActionScript>
+		</DefaultAction>
+	</Task>
+</BES>

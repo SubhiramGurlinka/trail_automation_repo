@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: IBM MQ v9.2.0.25 - RHEL Family</Title>
+		<Description><![CDATA[<p>This will update IBM MQ to version 9.2.0.25.</p>]]></Description>
+		<Relevance>architecture of operating system = "x86_64"</Relevance>
+		<Relevance><![CDATA[exists versions whose(it as string starts with "9.2.0") of packages whose(name of it starts with "MQSeriesRuntime") of rpms]]></Relevance>
+		<Relevance><![CDATA[not exists packages whose (name of it starts with "MQSeriesRuntime" AND rpm version record of it >= rpm package version record "9.2.0-25") of rpm]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>935951002</DownloadSize>
+		<Source>IBM</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-05-21</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"9.2.0.25","size":935951002 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp IBM</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:ibm:ibm_mq:9.2.0.25:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Tue, 21 May 2024 09:35:03 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy the fix pack.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch 9.2.0-IBM-MQ-LinuxX64-FP0025.tar.gz sha1:947545ed1c38a00550722ad60d5eb59f95770a32 size:935951002 https://localhost:52311/Uploads/947545ed1c38a00550722ad60d5eb59f95770a32/9.2.0-IBM-MQ-LinuxX64-FP0025.tar.gz sha256:10198abcf5c9e3a8bcbbe118e07549ff20e36f26a844d21ecee67032d3102b27
+
+parameter "patch_tmp" = "/var/tmp/patch_tmp/"
+
+// delete patch tmp folder if exists:
+folder delete "{parameter "patch_tmp"}"
+
+// create patch tmp folder:
+folder create "{parameter "patch_tmp"}"
+
+// Move archive file to patch temp
+wait mv __Download/9.2.0-IBM-MQ-LinuxX64-FP0025.tar.gz {parameter "patch_tmp"}
+
+wait sh -c "cd '{parameter "patch_tmp"}'; /usr/bin/tar -xf 9.2.0-IBM-MQ-LinuxX64-FP0025.tar.gz"
+wait sh -c "cd '{parameter "patch_tmp"}'; /usr/bin/rpm -Uvh *.rpm"
+
+// Clean up
+folder delete "{parameter "patch_tmp"}"
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

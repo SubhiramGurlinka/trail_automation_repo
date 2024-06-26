@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: IBM MQ v9.3.0.17 - RHEL Family</Title>
+		<Description><![CDATA[<p>This will update IBM MQ to version 9.3.0.17.</p>]]></Description>
+		<Relevance>architecture of operating system = "x86_64"</Relevance>
+		<Relevance><![CDATA[exists versions whose(it as string starts with "9.3.0") of packages whose(name of it starts with "MQSeriesRuntime") of rpms]]></Relevance>
+		<Relevance><![CDATA[not exists packages whose (name of it starts with "MQSeriesRuntime" AND rpm version record of it >= rpm package version record "9.3.0-17") of rpm]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>459035826</DownloadSize>
+		<Source>IBM</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-05-21</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"9.3.0.17","size":459035826 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp IBM</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:ibm:ibm_mq:9.3.0.17:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Tue, 21 May 2024 09:36:09 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy the fix pack.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch 9.3.0-IBM-MQ-LinuxX64-FP0017.tar.gz sha1:3fd6e43de5771f6ec786db69dbe332af4c4f0435 size:459035826 https://localhost:52311/Uploads/3fd6e43de5771f6ec786db69dbe332af4c4f0435/9.3.0-IBM-MQ-LinuxX64-FP0017.tar.gz sha256:5b418276a47fa9819316cd98cd1bb1aebce4a7cbb3e7a70d6e84cbc1c8f0fef5
+
+parameter "patch_tmp" = "/var/tmp/patch_tmp/"
+
+// delete patch tmp folder if exists:
+folder delete "{parameter "patch_tmp"}"
+
+// create patch tmp folder:
+folder create "{parameter "patch_tmp"}"
+
+// Move archive file to patch temp
+wait mv __Download/9.3.0-IBM-MQ-LinuxX64-FP0017.tar.gz {parameter "patch_tmp"}
+
+wait sh -c "cd '{parameter "patch_tmp"}'; /usr/bin/tar -xf 9.3.0-IBM-MQ-LinuxX64-FP0017.tar.gz"
+wait sh -c "cd '{parameter "patch_tmp"}'; /usr/bin/rpm -Uvh *.rpm"
+
+// Clean up
+folder delete "{parameter "patch_tmp"}"
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

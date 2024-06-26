@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: IBM WebSphere Application Server v9.0.5020.20240605 - Linux Unix</Title>
+		<Description><![CDATA[
+<P>IBM WebSphere Application Server Interim Fix 9.0.5020.20240605 is available. Use the action below to update WebSphere Application Server Base Edition or Network Deployment Edition to the latest version.</P>
+<p><strong>Note:</strong>
+<ul>
+<p> This fixlet supports the installation of IBM Websphere in the folders "/opt/IBM" and "/usr/IBM".</p>
+<p>Please ensure that the permissions and file paths for installations and patch upgrades are accurate, as the current fixlet checks installations in designated directories.</p>
+</ul>
+]]></Description>
+		<Relevance>unix of operating system</Relevance>
+		<Relevance><![CDATA[exists lines containing "com.ibm.websphere." whose ( ( it contains "com.ibm.websphere.BASE" OR it contains "com.ibm.websphere.ND" ) and it contains "9.0") of files "installed.xml" of folders ("/opt/IBM/WebSphere/AppServer/properties/version";"/usr/IBM/WebSphere/AppServer/properties/version")]]></Relevance>
+		<Relevance><![CDATA[not exists (it as version) whose(it >= "9.0.5020.20240605") of first matches (regex "([0-9]+(\.[0-9]+)+)") of following texts of firsts "version" of it whose(it contains "package " AND it contains "offering") of lines containing "com.ibm.websphere." of files "installed.xml" of folders ("/opt/IBM/WebSphere/AppServer/properties/version";"/usr/IBM/WebSphere/AppServer/properties/version")]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>1239846412</DownloadSize>
+		<Source>IBM</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-06-21</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"9.0.5020.20240605","size":1239846412 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp IBM</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:ibm:ibm_websphere:9.0.5020.20240605:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Fri, 21 Jun 2024 09:01:59 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<Action ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to execute this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch 9.0.5-WS-WAS-FP020.zip sha1:d32978cc7948f32f8e386b1f3c4995eccc9d26da size:1239846412 https://localhost:52311/Uploads/d32978cc7948f32f8e386b1f3c4995eccc9d26da/9.0.5-WS-WAS-FP020.zip sha256:c170cab206d2ad58cf0d592fcfd0caec9136f2569161a01e3779d3eb8e679681
+
+// set Websphere Application Server directory:
+parameter "installdir" = "{ parent folder of parent folder of parent folder of file "installed.xml" whose (exists lines whose ( ( it contains "com.ibm.websphere.BASE" OR it contains "com.ibm.websphere.ND" ) and it contains "9.0") of it) of folders ("/opt/IBM/WebSphere/AppServer/properties/version";"/usr/IBM/WebSphere/AppServer/properties/version") }"
+
+// stage patches in temporary patch directory:
+parameter "patch_tmp" = "/opt/IBM/patch_tmp"
+
+// delete patch tmp folder if exists:
+folder delete "{parameter "patch_tmp"}"
+
+// create patch tmp folder:
+folder create "{parameter "patch_tmp"}"
+
+// unpack patch archive to patch_tmp directory:
+wait unzip __Download/9.0.5-WS-WAS-FP020.zip -d "{parameter "patch_tmp"}"
+
+// set path to IMCL
+parameter "imcldir" = "/opt/IBM/InstallationManager/eclipse/tools/"
+
+// set path to repository directory
+parameter "repodir" = "{parameter "patch_tmp"}"
+
+
+// Run imcl to list available repositories and ensure 9.0.5020.20240605 exists and exit code is 0
+
+delete __createfile
+
+createfile until _END_OF_FILE_
+
+cd { parameter "imcldir" }
+
+./imcl listAvailablePackages -repositories { parameter "repodir"} >>{ parameter "patch_tmp" }/run.log
+
+_END_OF_FILE_
+
+// change this to be relative to patch_tmp:
+delete "{parameter "patch_tmp"}/run.sh"
+copy __createfile "{parameter "patch_tmp"}/run.sh"
+
+// Change permissions:
+// TODO: determine least permissions required instead of 777:
+wait chmod -R 777 "{parameter "patch_tmp"}"
+
+// run patch application
+override wait
+completion=job
+timeout_seconds=3600
+disposition=terminate
+wait bash "{parameter "patch_tmp"}/run.sh" >> {parameter "patch_tmp"}/run.log
+
+continue if { 0 = exit code of action | 999 }
+
+continue if { exists files whose (name of it starts with "run" AND content of it contains "5020") of folder (parameter "patch_tmp") }
+
+parameter "InstallType" = "{ unique values of parenthesized parts of first matches (regex "com.ibm.websphere\.([A-Z]+)\.") of following texts of firsts " id" of it whose(it contains "com.ibm.websphere." AND it contains "package " AND it contains "offering") of lines containing "com.ibm.websphere." of files "installed.xml" of folders ("/opt/IBM/WebSphere/AppServer/properties/version";"/usr/IBM/WebSphere/AppServer/properties/version") }"
+
+parameter "patchlist" = "{ lines whose (it contains ( (parameter "InstallType") & ".v90") ) of files "/opt/IBM/patch_tmp/run.log" }"
+
+delete __createfile
+
+createfile until _END_OF_FILE_
+
+cd { parameter "imcldir" }
+
+./imcl install {parameter "patchlist"} -repositories { parameter "repodir"} -installationDirectory {parameter "installdir"} -acceptLicense -sP  >>{ parameter "patch_tmp" }/patchrun.log
+
+_END_OF_FILE_
+
+// change this to be relative to patch_tmp:
+delete "{parameter "patch_tmp"}/run.sh"
+copy __createfile "{parameter "patch_tmp"}/run.sh"
+
+// Change permissions:
+// TODO: determine least permissions required instead of 777:
+wait chmod -R 777 "{parameter "patch_tmp"}"
+
+// run patch application
+override wait
+completion=job
+timeout_seconds=3600
+disposition=terminate
+wait bash "{parameter "patch_tmp"}/run.sh" >> {parameter "patch_tmp"}/run.log
+
+continue if { 0 = exit code of action | 999 }
+
+// End]]></ActionScript>
+		</Action>
+	</Fixlet>
+</BES>

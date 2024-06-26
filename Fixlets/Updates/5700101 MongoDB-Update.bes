@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: MongoDB v7.0.11 - RedHat / CentOS 7 (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "MongoDB v7.0.11" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 54991472
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual database back up.</li>		</ul>
+]]></Description>
+		<Relevance>((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 7") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists package "mongodb-org" of rpm]]></Relevance>
+
+				<Relevance><![CDATA[not exists package "mongodb-org" whose (version of it >= "7.0.11") of rpm]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>54991472</DownloadSize>
+		<Source>MongoDB</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-05-23</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"7.0.11","size":54991472 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp MongoDB</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:mongodb:mongodb:7.0.11:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Thu, 23 May 2024 19:38:44 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  Community Edition v7.0.11.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch mongodb-database-tools-100._redhat_7.x86_64.rpm sha1:3bbda60d926c8fbab234a19518f0a32a8a935f1d size:54991472 https://repo.mongodb.org/yum/redhat/7/mongodb-org/7.0/x86_64/RPMS/mongodb-database-tools-100.9.4.x86_64.rpm sha256:d84a5770c9eb25d81ddfab6407786a40458e079edc6e2951439e656657019a46
+prefetch mongodb-mongosh-_redhat_7.x86_64.rpm sha1:3a684bf181982b4db2d23777699ffddb3ccdc667 size:58502356 https://repo.mongodb.org/yum/redhat/7/mongodb-org/7.0/x86_64/RPMS/mongodb-mongosh-2.2.6.x86_64.rpm sha256:15159a51ac6336bd63507e659e711842f08c565ab987a8f0552ed8d0c5d153a2
+prefetch mongodb-org-tools-_redhat_7.x86_64.rpm sha1:7d884b7cd2d0e50623a1a92685db6a9b2c3eb549 size:6360 https://repo.mongodb.org/yum/redhat/7/mongodb-org/7.0/x86_64/RPMS/mongodb-org-tools-7.0.11-1.el7.x86_64.rpm sha256:220d207c3c9d94558c0d17947489a75deb2c9370d8ce205f6e718df603953b30
+prefetch mongodb-org-_redhat_7.x86_64.rpm sha1:103bca4c200b018d2c89ddf75bee81cfa6aa00a7 size:6364 https://repo.mongodb.org/yum/redhat/7/mongodb-org/7.0/x86_64/RPMS/mongodb-org-7.0.11-1.el7.x86_64.rpm sha256:011825bfad41258a309e82fd071f2095d322fdebb8e375f3ef4cdee84fd4762b
+prefetch mongodb-org-database-_redhat_7.x86_64.rpm sha1:ef80c842502dc4c4d8667bbdee111c84e90b178b size:6472 https://repo.mongodb.org/yum/redhat/7/mongodb-org/7.0/x86_64/RPMS/mongodb-org-database-7.0.11-1.el7.x86_64.rpm sha256:f36379ddb143b1c76b2e3d54f5c8c4f8403d98de0ce76352e43ef7eced7027c4
+prefetch mongodb-org-database-tools-extra-_redhat_7.x86_64.rpm sha1:dfc3cc456bbbd661f696a815faf1e4d839e3673c size:11796 https://repo.mongodb.org/yum/redhat/7/mongodb-org/7.0/x86_64/RPMS/mongodb-org-database-tools-extra-7.0.11-1.el7.x86_64.rpm sha256:ae28a225ebf6ebdec7dfa2b2fca8e24e1bf5763ffd6a3069fec61a0568e02418
+prefetch mongodb-org-mongos-_redhat_7.x86_64.rpm sha1:3f7c260a6de7e8db050fc8f2a5426a5b8d85b9da size:26291044 https://repo.mongodb.org/yum/redhat/7/mongodb-org/7.0/x86_64/RPMS/mongodb-org-mongos-7.0.11-1.el7.x86_64.rpm sha256:7521f81e5ec0ccb0bda2084a51a350ede589b11fdb8e27feda9484f49754b85c
+prefetch mongodb-org-server-_redhat_7.x86_64.rpm sha1:63213228481eec6219a7c5ed6d2b9aa212a76711 size:38248892 https://repo.mongodb.org/yum/redhat/7/mongodb-org/7.0/x86_64/RPMS/mongodb-org-server-7.0.11-1.el7.x86_64.rpm sha256:ca94f7169b1e17a9555e10972b7af0474fe67b0df036145b4b49ec2ca3d02a2a
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1109/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 7") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*rpm"
+continue if {exit code of action = 0}
+
+
+elseif {((exists match (regex "SuSE.* (7)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*rpm"
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) (999)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait /bin/bash "./__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*deb"
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

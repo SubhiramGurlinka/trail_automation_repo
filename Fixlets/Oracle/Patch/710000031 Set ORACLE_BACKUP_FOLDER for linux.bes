@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Set ORACLE_BACKUP_FOLDER</Title>
+		<Description><![CDATA[<P>This task lets you put a value in the client setting "ORACLE_BACKUP_FOLDER"</P>
+<P>which specifies where to back up the Oracle home folder before patching.</P>
+<P>The default is no value (i.e. do not create backup).</P>]]></Description>
+		<Relevance>not exists setting "ORACLE_BACKUP_FOLDER" whose (value of it != "") of client</Relevance>
+		<Category></Category>
+		<Source>Internal</Source>
+		<SourceID></SourceID>
+		<SourceReleaseDate>2024-03-14</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 01 Apr 2024 12:00:00 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell">action parameter query "FOLDER" with description "Back up ORACLE_HOME to this folder before patching or rollback"
+      setting "ORACLE_BACKUP_FOLDER"="{parameter "FOLDER"}" on "{parameter "action issue date" of action}" for client</ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

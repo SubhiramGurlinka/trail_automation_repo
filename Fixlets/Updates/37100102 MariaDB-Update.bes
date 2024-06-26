@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: MariaDB v11.4.2 - RedHat / CentOS 7 (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "MariaDB v11.4.2" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 647045120
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual database back up.</li>		</ul>
+]]></Description>
+		<Relevance>((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 7") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists packages ("MariaDB-server") of rpm]]></Relevance>
+
+				<Relevance><![CDATA[not exists (it as version) whose(it >= "11.4.2") of first matches (regex "[0-9]+(\.[0-9]+)+") of ((it as string) of package "MariaDB-server" of rpm)]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>647045120</DownloadSize>
+		<Source>MariaDB</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-05-29</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"11.4.2","size":647045120 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp MariaDB</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:mariadb:mariadb:11.4.2:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Sat, 22 Jun 2024 10:37:46 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  v11.4.2.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch mariadb-LATESTVER-rhel-7-x86_64-rpms.tar sha1:a90ba2e3255258731c27c09b55a532ca432d0b6b size:647045120 https://downloads.mariadb.com/MariaDB/mariadb-11.4.2/yum/rhel/mariadb-11.4.2-rhel-7-x86_64-rpms.tar sha256:6353d32ac9960ee3b68c25e0089247ddfbda14deae7e0e5e097a138285856383
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1119/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 7") of name of it) AND (architecture of it = "x86_64")) of operating system}
+wait tar -xvf "./__Download/mariadb-LATESTVER-rhel-7-x86_64-rpms.tar" -C "./__Download/"
+
+//Adding skip-broken as there are multiple sub module packages with different version.
+wait /bin/bash "./__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mariadb-*/*.rpm" --skip-broken
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "SuSE.* (7)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait tar -xvf "./__Download/mariadb-LATESTVER-rhel-7-x86_64-rpms.tar" -C "./__Download/"
+
+//Adding skip-broken as there are multiple sub module packages with different version.
+wait /bin/bash "./__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mariadb-*/*.rpm" --skip-broken
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) ()") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait tar -xvf "./__Download/mariadb-LATESTVER-rhel-7-x86_64-rpms.tar" -C "./__Download/"
+
+wait /bin/bash "./__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mariadb-*/*.deb"
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

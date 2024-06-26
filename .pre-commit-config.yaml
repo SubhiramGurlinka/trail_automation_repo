@@ -1,0 +1,59 @@
+---
+# run on only items staged in git:  pre-commit
+# automatically run on commit:      pre-commit install
+# check all files in repo:          pre-commit run --all-files
+# check all files + manual checks:  pre-commit run --all-files --hook-stage manual
+# update all pre-commit hooks:      pre-commit autoupdate
+# https://github.com/pre-commit/pre-commit-hooks
+repos:
+  - repo: meta
+    hooks:
+      # make sure all hooks run against at least one file
+      # - id: check-hooks-apply
+      # make sure any defined exclusion actually excludes something
+      - id: check-useless-excludes
+  - repo: https://github.com/jgstew/pre-commit-jgstew
+    rev: v1.1.5
+    hooks:
+      - id: verify-files-are-ascii
+        files: \.bes$
+      - id: validate-bes
+        files: \.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files DO NOT contain template var
+        files: \.bes$
+        args: ['--num-matches=0', '--re-pattern=%\S{3,}%']
+        exclude: ".+Update Oracle Patch List and update scripts.+bes"
+      - id: verify-files-contain-pattern
+        name: Verify BES files DO NOT contain root server
+        files: \.bes$
+        args: ['--num-matches=0', '--re-pattern=dlbigfixapp1v']
+      - id: regex-search-filter-replace
+        name: replace non-ascii vowels in Jan Sarenik
+        files: Update Oracle Patch List and update scripts.*\.bes$
+        args: ['--search=Ján Sáreník', '--filter=.+', '--replace=Jan Sarenik', '--overwrite']
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      # - id: check-xml
+      - id: end-of-file-fixer
+      # https://www.aleksandrhovhannisyan.com/blog/crlf-vs-lf-normalizing-line-endings-in-git/
+      # - id: mixed-line-ending
+      #   args: ['--fix=no']
+      - id: trailing-whitespace
+      #  args: [--markdown-linebreak-ext=md]
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: [--branch, main]
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.26.3
+    hooks:
+      - id: yamllint
+        args: [-c=.yamllint.yaml]

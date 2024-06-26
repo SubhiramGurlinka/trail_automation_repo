@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Analysis>
+		<Title>Oracle Middleware Info - Universal</Title>
+		<Description><![CDATA[ ]]></Description>
+		<Relevance
+    ><![CDATA[exists files "inventory.xml" of folders "ContentsXML" of /* Oracle inventory_loc */ ( folders "oraInventory" of folders of (folders "/home"; folders "/export/home"); folders "C:\Program Files\Oracle\Inventory"; (folders it) of (it as trimmed string) of following texts of firsts "=" of lines containing "inventory_loc" whose(it starts with "inventory_loc") of files "oraInst.loc" of (folders "/etc";folders "/var/opt/oracle") )]]></Relevance>
+		<Source>Internal</Source>
+		<SourceReleaseDate>2023-04-13</SourceReleaseDate>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Thu, 13 Apr 2023 23:47:05 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<Property
+      Name="ORACLE_HOMEs"
+      ID="1"
+      EvaluationPeriod="PT6H"
+    ><![CDATA[preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts "LOC" of lines containing "LOC" whose(it as lowercase contains "<home") of files "inventory.xml" of folders "ContentsXML" of /* Oracle inventory_loc */ ( folders "oraInventory" of folders of (folders "/home"; folders "/export/home"); folders "C:\Program Files\Oracle\Inventory"; (folders it) of (it as trimmed string) of following texts of firsts "=" of lines containing "inventory_loc" whose(it starts with "inventory_loc") of files "oraInst.loc" of (folders "/etc";folders "/var/opt/oracle") )]]></Property>
+		<Property
+      Name="Users of ORACLE_HOMEs"
+      ID="2"
+      EvaluationPeriod="PT6H"
+    ><![CDATA[if windows of operating system then NOTHING else ( (unique values of user names of it, pathnames of it) of (folders it) of /* ORACLE_HOMEs */ preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts "LOC" of lines containing "LOC" whose(it as lowercase contains "<home") of files "inventory.xml" of folders "ContentsXML" of /* Oracle inventory_loc */ ( folders "oraInventory" of folders of (folders "/home"; folders "/export/home"); folders "C:\Program Files\Oracle\Inventory"; (folders it) of (it as trimmed string) of following texts of firsts "=" of lines containing "inventory_loc" whose(it starts with "inventory_loc") of files "oraInst.loc" of (folders "/etc";folders "/var/opt/oracle") ) )]]></Property>
+		<Property
+      Name="Name, Version of Oracle Inventory"
+      ID="3"
+      EvaluationPeriod="PT6H"
+    ><![CDATA[(preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts " name=" of it, preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts " version=" of it) of lines containing "<distribution " whose(it as lowercase contains "installed") of files "registry.xml" of folders "inventory" of (folders it) of /* ORACLE_HOMEs */ preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts "LOC" of lines containing "LOC" whose(it as lowercase contains "<home") of files "inventory.xml" of folders "ContentsXML" of /* Oracle inventory_loc */ ( folders "oraInventory" of folders of (folders "/home"; folders "/export/home"); folders "C:\Program Files\Oracle\Inventory"; (folders it) of (it as trimmed string) of following texts of firsts "=" of lines containing "inventory_loc" whose(it starts with "inventory_loc") of files "oraInst.loc" of (folders "/etc";folders "/var/opt/oracle") )]]></Property>
+		<Property
+      Name="Oracle inventory_loc"
+      ID="4"
+      EvaluationPeriod="PT6H"
+    ><![CDATA[/* https://support.oracle.com/epmos/faces/DocumentDisplay?_afrLoop=742273649369281 */ ( folders "oraInventory" of folders of (folders "/home"; folders "/export/home"); folders "C:\Program Files\Oracle\Inventory"; (folders it) of (it as trimmed string) of following texts of firsts "=" of lines containing "inventory_loc" whose(it starts with "inventory_loc") of files "oraInst.loc" of (folders "/etc";folders "/var/opt/oracle") )]]></Property>
+		<Property
+      Name="WebLogic version"
+      ID="5"
+      EvaluationPeriod="PT6H"
+    ><![CDATA[first matches (regex "[0-9]+(\.[0-9]+)+") of preceding texts of firsts ("%22";"'") of following texts of firsts " description=%22WLS " of lines containing "patch-def" of files of folders "inventory/patches" of (folders it) whose(exists preceding texts whose(it contains "WebLogic") of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts " name=" of lines containing "<distribution " whose(it as lowercase contains "installed") of files "registry.xml" of folders "inventory" of it) of /* ORACLE_HOMEs */ preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts "LOC" of lines containing "LOC" whose(it as lowercase contains "<home") of files "inventory.xml" of folders "ContentsXML" of /* Oracle inventory_loc */ ( folders "oraInventory" of folders of (folders "/home"; folders "/export/home"); folders "C:\Program Files\Oracle\Inventory"; (folders it) of (it as trimmed string) of following texts of firsts "=" of lines containing "inventory_loc" whose(it starts with "inventory_loc") of files "oraInst.loc" of (folders "/etc";folders "/var/opt/oracle") )]]></Property>
+	</Analysis>
+</BES>

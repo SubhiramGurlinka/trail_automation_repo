@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: MongoDB v7.0.11 - SUSE 15 (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "MongoDB v7.0.11" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 52022672
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual database back up.</li>		</ul>
+]]></Description>
+		<Relevance>((exists match (regex "SuSE.* (15)") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists package "mongodb-org" of rpm]]></Relevance>
+
+				<Relevance><![CDATA[not exists package "mongodb-org" whose (version of it >= "7.0.11") of rpm]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>52022672</DownloadSize>
+		<Source>MongoDB</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-05-23</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"7.0.11","size":52022672 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp MongoDB</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:mongodb:mongodb:7.0.11:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Thu, 23 May 2024 20:59:57 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  Community Edition v7.0.11.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch mongodb-database-tools-100._suse_15.x86_64.rpm sha1:1d317b2ca0b87620a33954a892202b82c0adfa7a size:52022672 https://repo.mongodb.org/zypper/suse/15/mongodb-org/7.0/x86_64/RPMS/mongodb-database-tools-100.9.4.x86_64.rpm sha256:6faeaf4e0907b73bbc65f1c9cb295f106572a46e11690409ec9160a5d71c0d43
+prefetch mongodb-mongosh-_suse_15.x86_64.rpm sha1:d1bc265f51b1f9a7237a2c484496c07967aaa8a0 size:58502356 https://repo.mongodb.org/zypper/suse/15/mongodb-org/7.0/x86_64/RPMS/mongodb-mongosh-2.2.6.x86_64.rpm sha256:b882842ffa765692623388a9e48529f18592bef2dadd3f97e6e691efa8f7c0b8
+prefetch mongodb-org-tools-_suse_15.x86_64.rpm sha1:71eee8f44157d56d818b0c5b3c89842983bfa4f6 size:9472 https://repo.mongodb.org/zypper/suse/15/mongodb-org/7.0/x86_64/RPMS/mongodb-org-tools-7.0.11-1.suse15.x86_64.rpm sha256:447bbcaa4afa97e14d3547897e10c917055ae72a04a943f75b524fe0d6253b2f
+prefetch mongodb-org-_suse_15.x86_64.rpm sha1:3ad2b6d7f6956bb8be78d5f2c1e062936f05f3b4 size:9480 https://repo.mongodb.org/zypper/suse/15/mongodb-org/7.0/x86_64/RPMS/mongodb-org-7.0.11-1.suse15.x86_64.rpm sha256:7515a667f3d410c1e6a0e87ca7087555a7f50690d3aee34b40c25a7cf37ef542
+prefetch mongodb-org-database-_suse_15.x86_64.rpm sha1:9b4969a456eae6a9ff74c68684d1b1d5d000498a size:9588 https://repo.mongodb.org/zypper/suse/15/mongodb-org/7.0/x86_64/RPMS/mongodb-org-database-7.0.11-1.suse15.x86_64.rpm sha256:5e9250d9b85bb38d358ee35f3bcab5aef23088c2f0e28c8f91af7cf82e565f06
+prefetch mongodb-org-database-tools-extra-_suse_15.x86_64.rpm sha1:ccd14196153f4c474c9d899027d2f78a80d5bbbc size:14688 https://repo.mongodb.org/zypper/suse/15/mongodb-org/7.0/x86_64/RPMS/mongodb-org-database-tools-extra-7.0.11-1.suse15.x86_64.rpm sha256:0ac408f6f05b6ebe03f07b83167f3a0f06b49aacf6dd8bca5d0ea2ed2cc47a6f
+prefetch mongodb-org-mongos-_suse_15.x86_64.rpm sha1:a6d481ae643417e51661cdb2f30045b988a1629e size:23743056 https://repo.mongodb.org/zypper/suse/15/mongodb-org/7.0/x86_64/RPMS/mongodb-org-mongos-7.0.11-1.suse15.x86_64.rpm sha256:52810366948f9c9940c4e7c59f286c84c20b2b484a00e6ee468f97032af5b551
+prefetch mongodb-org-server-_suse_15.x86_64.rpm sha1:1788275770a8ade394d02f1e5cb6d7d46028de33 size:34306108 https://repo.mongodb.org/zypper/suse/15/mongodb-org/7.0/x86_64/RPMS/mongodb-org-server-7.0.11-1.suse15.x86_64.rpm sha256:082bd52ee5af2bbfb531414fc002821916e604a4401734ca360f8ab2462ce002
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1109/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 15") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*rpm"
+continue if {exit code of action = 0}
+
+
+elseif {((exists match (regex "SuSE.* (15)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*rpm"
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) (999)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait /bin/bash "./__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*deb"
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

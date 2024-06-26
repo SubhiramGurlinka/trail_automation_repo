@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site>
+<Relevance>version of client >= "9.2" AND not in proxy agent context AND unix of operating system</Relevance>
+</Site>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Digest>
+    <Relevance><![CDATA[exists files ("/etc/oratab"; "/var/opt/oracle/oratab")]]></Relevance>
+    <DigestRelevanceEvaluationPeriod>PT2H</DigestRelevanceEvaluationPeriod>
+    <ChildEvaluationPeriod>PT2H</ChildEvaluationPeriod>
+</Digest>

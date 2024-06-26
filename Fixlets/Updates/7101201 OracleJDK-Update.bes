@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: OracleJDK v21.0.2 - Debian Family (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "OracleJDK v21.0.2" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 167864596
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual backup of System Preferences (if any).</li>		</ul>
+]]></Description>
+		<Relevance><![CDATA[exists debianpackages]]></Relevance>
+		<Relevance><![CDATA[exists versions whose(it as string starts with "21") of packages whose(name of it starts with "jdk") of debianpackages]]></Relevance>
+		<Relevance><![CDATA[not exists (it as version) whose(it >= "21.0.2") of first matches (regex "[0-9]+(\.[0-9]+)+") of ((it as string) of packages whose (name of it starts with "jdk") of debianpackages)]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>167864596</DownloadSize>
+		<Source>Oracle</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-03-06</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"21.0.2","size":167864596 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp Oracle</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:oracle:oraclejdk:21.0.2:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Wed, 06 Mar 2024 08:01:18 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  v21.0.2.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch jdk-21_linux-x64_bin.deb sha1:b9828ee61dc4c2baa5ff5127a92e253197ac6905 size:167864596 https://download.oracle.com/java/21/archive/jdk-21.0.2_linux-x64_bin.deb sha256:5022d1a71021d4749bb3c5d3600bc4de37dfb5986cfb0d69d86d700b760b8b4e
+
+wait /bin/bash -c "cd './__Download' && dpkg -i *.deb"
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

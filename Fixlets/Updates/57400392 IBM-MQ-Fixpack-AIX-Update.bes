@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: IBM MQ v9.2.0.25 - AIX</Title>
+		<Description><![CDATA[<p>This will update IBM MQ to version 9.2.0.25.</p>]]></Description>
+		<Relevance>unix of operating system</Relevance>
+		<Relevance><![CDATA[(exists fileset matching "lpp_name = 'mqm.server.rte'" of it AND not exists fileset matching "lpp_name = 'mqm.server.rte'" whose (version of it >= "9.2.0.25") of it) of object repository]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>1263304211</DownloadSize>
+		<Source>IBM</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-05-23</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"9.2.0.25","size":1263304211 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp IBM</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:ibm:ibm_mq:9.2.0.25:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Thu, 23 May 2024 10:34:17 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to initiate the deployment process.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch 9.2.0-IBM-MQ-AixPPC64-FP0025.tar.Z sha1:89f75a3705f1c1369ec2dad478dee2268bd5db5b size:1263304211 https://localhost:52311/Uploads/89f75a3705f1c1369ec2dad478dee2268bd5db5b/9.2.0-IBM-MQ-AixPPC64-FP0025.tar.Z sha256:4e6d52bf426814a953a8f01509159e17e2a4bd514c23c84989cb520fa0b7a5fc
+
+parameter "patch_tmp" = "/var/tmp/patch_tmp/"
+
+// delete patch tmp folder if exists:
+folder delete "{parameter "patch_tmp"}"
+
+// create patch tmp folder:
+folder create "{parameter "patch_tmp"}"
+
+// Move archive file to patch temp
+wait mv __Download/9.2.0-IBM-MQ-AixPPC64-FP0025.tar.Z {parameter "patch_tmp"}
+
+wait uncompress "{parameter "patch_tmp"}/9.2.0-IBM-MQ-AixPPC64-FP0025.tar.Z"
+wait sh -c "cd '{parameter "patch_tmp"}'; /usr/bin/tar -xf { preceding texts of lasts ".Z" of "9.2.0-IBM-MQ-AixPPC64-FP0025.tar.Z" }"
+wait sh -c "cd '{parameter "patch_tmp"}'; /usr/sbin/installp -agXYd . all"
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

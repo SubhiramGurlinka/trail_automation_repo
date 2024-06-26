@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: Apache Tomcat 8 v8.5.100 - Linux (SystemD-based)</Title>
+		<Description><![CDATA[
+<div>
+  This Fixlet
+  will download and
+  update
+
+  "Apache Tomcat 8 v8.5.100" onto selected endpoints.
+  <br /><br /><b>Download Size:</b> 10885192
+
+  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+</div><br><br><b>Prerequisite:</b> Supported Java versions 8 and later with a JAVA_HOME environment variable set to the installed JDK or JRE on the target endpoint.
+<P>For each Apache Tomcat 8.x instance found, this fixlet</P>
+<UL>
+<LI>Stops the Tomcat service using 'systemctl stop'</LI>
+<LI>Makes a backup copy of the instance (for instance, tar /usr/local/tomcat8 to /usr/local/tomcat8-backup_ActionID.tgz)</LI>
+<LI>Extracts the new version of Tomcat over the original instance's path, excluding the 'conf' directory (the original 'conf' is preserved)</LI>
+<LI>Extracts the new version's default 'conf' directory to a new 'default-conf' under the original instance (to allow comparing your current conf to the default conf)</LI>
+<LI>Reassigns the new version's UID and GID ownership to the original instance's UID and GID</LI>
+<LI>Starts the Tomcat service using 'systemctl start'</LI></UL>
+<P>If multiple Tomcat 8.x instances are found, each are upgraded.</P>
+<P>&nbsp;</P>
+<P>Caveats:</P>
+<UL>
+<LI>Only Tomcat instances that are launched via systemd service are identified.</LI>
+<LI>Any changes to UID and GID beneath the Tomcat instance are not preserved (the new version is reassigned with the top-level UID and GID of the original instance)</LI>
+<LI>Any new options required for the new Tomcat instance will need to be applied manually (the original version's 'conf' directory is kept in place)</LI></UL>
+<P>&nbsp;</P>
+See Also: Tomcat 10.x vulnerabilities: <A HREF="https://tomcat.apache.org/security-8.html">https://tomcat.apache.org/security-8.html</A>
+]]></Description>
+		<Relevance><![CDATA[name of operating system as lowercase contains "linux"]]></Relevance>
+		<Relevance><![CDATA[/* systemd-based linux */ exists folders "/etc/systemd/system"]]></Relevance>
+				<Relevance><![CDATA[ exists (it as version) whose (it = version "8" and it < version "8.5.100") of following texts of firsts "Apache Tomcat Version " of lines containing "Apache Tomcat Version " of files "RELEASE-NOTES" of (folders it) of unique values of (preceding text of first "%22" of it | it) of following texts of firsts "=" of following texts of firsts "=" of variables whose (it starts with "[Service].Environment=" AND it contains "CATALINA_HOME") of files whose (name of it ends with ".service") of folders "/etc/systemd/system"]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>10885192</DownloadSize>
+		<Source>Apache</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-04-19</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"8.5.100","size":10885192 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp Apache</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:apache:apache_tomcat_8:8.5.100:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Thu, 18 Apr 2024 19:32:12 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+				<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy Apache Tomcat 8 v8.5.100.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+begin prefetch block
+add prefetch item name=apache-tomcat8.tar.gz sha1=8775961a54ca9161c7807c744f0b850c8a8991c9 size=10885192 url=https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.100/bin/apache-tomcat-8.5.100.tar.gz sha256=163abe51289dd09dc375791888d6f2d5508c06050548dc4fc7700251f4bebaca
+end prefetch block
+
+// Install:
+
+parameter "archive_name"="apache-tomcat8.tar.gz"
+parameter "version"="8.5.100"
+parameter "versionmajor"="8"
+
+delete __createfile
+createfile until EOF_EOF_EOF
+#!/bin/sh
+
+# pipe-operator for error handling allows statements to run in the Debugger, without an action-context
+new_archive="{pathname of client folder of current site}/__Download/{parameter "archive_name" | "apache-tomcat8.tar.gz"}"
+backup_id={(id of action as string & "." & active count of action as string) | "12345"}
+new_version={parameter "version" | "8.0.53"}
+
+
+function update_instance(){{
+ if [[ ! -z "$1" ]] && [[ ! -z "$2" ]] && [[ ! -z "$3" ]] && [[ ! -z "$4" ]] && [[ ! -z "$5" ]]
+ then
+  # $1 = service name
+  # $2 = full pathname to instance
+  # $3 = instance folder name
+  # $4 = instance owner uid
+  # $5 = instance owner gid
+
+  echo Update service "$1" with path "$2" and folder shortname "$3"
+  echo Stopping "$1"
+  systemctl stop "$1"
+
+  echo Backing up "$2" to "$2-backup-${{backup_id}.tgz"
+  tar -C "$2/.." -czvf  "$2-backup-${{backup_id}.tgz" "$3"
+
+  echo Extracting "$new_archive" to "$2" without conf
+  tar -xvf "$new_archive" -C "$2" --strip 1 --overwrite --exclude="conf"
+
+  echo Extract Default Config for version $new_version to "$2/default-conf"
+  mkdir "$2/default-conf"
+  tar -C "$2/default-conf" -xvf "$new_archive" */conf
+
+  echo Restore original tomcat instance owner
+  chown -R $4:$5 "$2"
+
+  echo Starting "$1"
+  systemctl start "$1"
+ fi
+}
+
+# Generate lines for each service to update
+{concatenation "%0a" of ("update_instance " & it) of (concatenation " " of ("%22" & it & "%22")  of (item 0 of it; pathname of item 1 of it; name of item 1 of it; uid of item 1 of it as string; gid of item 1 of it as string)) of (name of it, (folders ((unique values of (preceding text of first "%22" of it | it) of following texts of firsts "=" of following texts of firsts "=" of variables whose (it starts with "[Service].Environment=" AND it contains "CATALINA_HOME") of it))) whose (exists (following texts of firsts "Apache Tomcat Version " of lines of files "RELEASE-NOTES" of it as version) whose (it = (parameter "versionmajor" | "8") and it < (parameter "version"))) of it) of files whose (name of it ends with ".service") of folders "/etc/systemd/system"}
+EOF_EOF_EOF
+
+delete update_tomcat.sh
+move __createfile update_tomcat.sh
+wait chmod 744 update_tomcat.sh
+wait /bin/bash ./update_tomcat.sh > /tmp/tomcat_upgrade.out 2>&1
+
+
+
+// End]]></ActionScript>
+      		<SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

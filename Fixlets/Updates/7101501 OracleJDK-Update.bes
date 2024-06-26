@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: OracleJDK v8.401 - RHEL Family (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "OracleJDK v8.401" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 144480066
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual backup of System Preferences (if any).</li>		<li>This content requires manual caching on the root server.</li>		</ul>
+]]></Description>
+		<Relevance><![CDATA[(exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Linux SuSE|Red Hat Enterprise( [a-zA-Z]*)?)") of name of it AND architecture of it = "x86_64") of operating system]]></Relevance>
+		<Relevance><![CDATA[exists versions whose(it as string starts with "1.8.0") of packages whose(name of it starts with "jdk") of rpms]]></Relevance>
+		<Relevance><![CDATA[not exists (it as version) whose(it >= "401") of first matches (regex "[0-9][0-9][0-9]+") of ((it as string) of packages whose (name of it starts with "jdk") of rpm)]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>144480066</DownloadSize>
+		<Source>Oracle</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-04-22</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"8.401","size":144480066 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp Oracle</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:oracle:oraclejdk:8.401:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 22 Apr 2024 06:03:34 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  v8.401.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch jdk-8u401-linux-x64.rpm sha1:9fb1c8158f4a5877540db5a4f3a447bf81b3536f size:144480066 https://localhost:52311/Uploads/9fb1c8158f4a5877540db5a4f3a447bf81b3536f/jdk-8u401-linux-x64.rpm sha256:c981dcdfeec4c813b503bd86cf3ce7047a01a6000c4669c21e6ec392cb31f6b8
+
+wait /bin/bash -c "cd './__Download' && /usr/bin/rpm -Uvh *.rpm"
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>
