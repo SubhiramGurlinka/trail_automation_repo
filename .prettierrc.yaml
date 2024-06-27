@@ -1,0 +1,11 @@
+---
+overrides:
+  - files: "*.bes"
+    options:
+      parser: xml
+      useTabs: true
+      printWidth: 1900
+      bracketSameLine: true
+      endOfLine: crlf
+      xmlWhitespaceSensitivity: ignore
+      xmlSelfClosingSpace: false
