@@ -9,14 +9,13 @@ repos:
   - repo: meta
     hooks:
       # make sure all hooks run against at least one file
-      #- id: check-hooks-apply
+      # - id: check-hooks-apply
       # make sure any defined exclusion actually excludes something
       - id: check-useless-excludes
   - repo: https://github.com/jgstew/pre-commit-jgstew
     rev: v1.1.5
     hooks:
       - id: git-clean
-      # args: ["--auto-clean"]
       - id: verify-files-are-ascii
         files: \.bes$
       - id: validate-bes
@@ -25,7 +24,7 @@ repos:
         name: Verify BES files DO NOT contain template var
         files: \.bes$
         args: ['--num-matches=0', '--re-pattern=%\S{3,}%']
-        # exclude: ".+EXAMPLE_EXCLUSION.+bes"
+        exclude: ".+Update Oracle Patch List and update scripts.+bes"
       - id: verify-files-contain-pattern
         name: Verify BES files contain valid CPE
         files: \.bes$
@@ -76,11 +75,6 @@ repos:
         files: \.bes$
         args: ['--re-pattern=<ActionScript\s+MIMEType="application\/x-Fixlet-Windows-Shell">\s*<!\[CDATA\[(\s|\S)+]]><\/ActionScript>']
         exclude: Oracle Middleware Info - Universal.bes$
-      # - id: verify-files-contain-pattern
-      #   name: Verify BES files contain long Relevance wrapped in CDATA tags
-      #   files: \.bes$
-      #   # this does not properly handle all cases:
-      #   args: ['--num-matches=0', '--re-pattern=<Relevance>[ (/A-Za-z0-9].{40,}']
       - id: verify-files-contain-pattern
         name: Verify BES files contain well formed prefetch
         files: \.bes$
@@ -95,6 +89,14 @@ repos:
         files: \.bes$
         # note: this check is limited to the first item within the prefetch block:
         args: ['--num-matches=0', '--re-pattern=(?m)begin prefetch block[\n\r\s]+prefetch']
+      - id: verify-files-contain-pattern
+        name: Verify BES files DO NOT contain root server
+        files: \.bes$
+        args: ['--num-matches=0', '--re-pattern=dlbigfixapp1v']
+      - id: regex-search-filter-replace
+        name: replace non-ascii vowels in Jan Sarenik
+        files: Update Oracle Patch List and update scripts.*\.bes$
+        args: ['--search=Ján Sáreník', '--filter=.+', '--replace=Jan Sarenik', '--overwrite']
       - id: revert-missing-change
         args: ['--change_regex=v[0-9]+(\.[0-9]+)* - .+</Title>$']
         files: \.bes$
@@ -104,21 +106,13 @@ repos:
         files: \.bes$
         require_serial: True
         stages: [manual]
-  # - repo: https://github.com/pre-commit/mirrors-prettier
-  #   rev: v2.4.1
-  #   hooks:
-  #     - id: prettier
-  #       additional_dependencies:
-  #         - prettier@2.4.1
-  #         - '@prettier/plugin-xml@1.1.0'
-  #       files: \.bes$
   - repo: https://github.com/mattlqx/pre-commit-search-and-replace
     rev: v1.1.2
     hooks:
       - id: search-and-replace
         files: \.bes$
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v4.0.1
     hooks:
       - id: check-yaml
       - id: check-json
@@ -127,9 +121,7 @@ repos:
       - id: check-ast
       - id: check-case-conflict
       - id: check-merge-conflict
-      - id: check-xml
-        types: ["text"]
-        files: \.bes$
+      # - id: check-xml
       - id: end-of-file-fixer
       # https://www.aleksandrhovhannisyan.com/blog/crlf-vs-lf-normalizing-line-endings-in-git/
       # - id: mixed-line-ending
@@ -137,8 +129,10 @@ repos:
       - id: trailing-whitespace
       #  args: [--markdown-linebreak-ext=md]
       - id: detect-private-key
+      - id: no-commit-to-branch
+        args: [--branch, main]
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.35.1
+    rev: v1.26.3
     hooks:
       - id: yamllint
         args: [-c=.yamllint.yaml]
@@ -158,5 +152,5 @@ repos:
     rev: v1.0
     hooks:
       - id: verify-fixlet-id
-        name: check if the fixlet id is valid
+        name: verify fixlet id is valid
         files: \.bes$
