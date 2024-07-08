@@ -44,7 +44,7 @@
 		</MIMEField>
 		<MIMEField>
 			<Name>x-fixlet-modification-time</Name>
-			<Value>Thu, 23 May 2024 22:26:43 +0000</Value>
+			<Value>Mon, 08 Jul 2024 09:16:51 +0000</Value>
 		</MIMEField>
 		<Domain>BESC</Domain>
 				<DefaultAction ID="Action1">
@@ -59,7 +59,7 @@ prefetch postgresql_3.rpm sha1:2524c05014174c083cf0e08b3c2e8697d01b6161 size:197
 prefetch postgresql_1.rpm sha1:dff0a769f9641e46a88b581379d2d81e5b3a8b6c size:7018412 https://download.postgresql.org/pub/repos/yum/16/redhat/rhel-8-x86_64/postgresql16-server-16.3-1PGDG.rhel8.x86_64.rpm sha256:674168b95fe251c335dd58d2fdc1d40f8477c7add10f7520f81c9a412f8f944b
 prefetch postgresql_2.rpm sha1:27e87d0ba1ab678a7a88565cb172b5c3fda69cc8 size:336524 https://download.postgresql.org/pub/repos/yum/16/redhat/rhel-8-x86_64/postgresql16-libs-16.3-1PGDG.rhel8.x86_64.rpm sha256:83fa47c6e5461d64b292449012880855a59ef1626d0d681621343bd05713d000
 
-prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1109/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1119/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
 
 wait chmod 744 __Download/InstallPackages.sh
 
