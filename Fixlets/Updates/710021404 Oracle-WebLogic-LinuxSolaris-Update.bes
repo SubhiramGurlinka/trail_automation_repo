@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: Oracle WebLogic v14.1.1.0.240711 - Linux and Solaris</Title>
+		<Description><![CDATA[
+		<p>This will update Oracle WebLogic 14.1.1.0.0+ to 14.1.1.0.240711</p>
+		<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>This software requires that the correct version of JAVA JDK be installed and at a minimum patch level.</li>
+		<li>If the JAVA JDK has been updated, it may require configuring the software to use the new version.</li>		<li>This content requires manual caching on the root server.</li>		<li>This content may require custom changes to the prefetch statement due to vendor inconsistencies.</li>		</ul>
+		<br/>
+		<p><strong>Note: </strong>This fixlet searches for the "ORACLE_WEBLOGIC_HOME" variable within the "/etc/environment" file. For instance, if the oraInventory path is "/Weblogic/Oracle/Middleware/oraInventory", the "ORACLE_WEBLOGIC_HOME" value would be "/WebLogic/Oracle".</p>
+]]></Description>
+		<Relevance>unix of operating system</Relevance>
+		<Relevance><![CDATA[/* SPBAT process not compatible with AIX */ not exists names whose(it as uppercase contains "AIX") of operating systems]]></Relevance>
+		<Relevance><![CDATA[1 = number of (it as trimmed string) whose(it = "14.1.1.0.0") of preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts " version=" of lines containing "<distribution " whose(it as lowercase contains "installed" AND exists preceding texts whose(it starts with "WebLogic") of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts " name=" of it) of files "registry.xml" of folders "inventory" of (folders it) of /* ORACLE_HOMEs */ preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts "LOC" of lines containing "LOC" whose(it as lowercase contains "<home") of files "inventory.xml" of folders "ContentsXML" of /* Oracle inventory_loc */ ( folders "oraInventory" of folders of (folders "/home"; folders "/export/home"; ((folders it) of unique values of (concatenations of substrings separated by "%22" of it) of keys "ORACLE_WEBLOGIC_HOME" of files ("/etc/environment"))); folders "C:\Program Files\Oracle\Inventory"; (folders it) of (it as trimmed string) of following texts of firsts "=" of lines containing "inventory_loc" whose(it starts with "inventory_loc") of files "oraInst.loc" of (folders "/etc";folders "/var/opt/oracle") )]]></Relevance>
+		<Relevance><![CDATA[not exists maxima whose(it >= following text of firsts "14.1" of "14.1.1.0.240711") of (it as version) of following texts of firsts "14.1" of first matches (regex "[0-9]+(\.[0-9]+)+") of preceding texts of firsts ("%22";"'") of following texts of firsts " description=%22WLS " of lines containing "patch-def" of files of folders "inventory/patches" of (folders it) whose(exists preceding texts whose(it contains "WebLogic") of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts " name=" of lines containing "<distribution " whose(it as lowercase contains "installed") of files "registry.xml" of folders "inventory" of it) of /* ORACLE_HOMEs */ preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts "LOC" of lines containing "LOC" whose(it as lowercase contains "<home") of files "inventory.xml" of folders "ContentsXML" of /* Oracle inventory_loc */ ( folders "oraInventory" of folders of (folders "/home"; folders "/export/home"; ((folders it) of unique values of (concatenations of substrings separated by "%22" of it) of keys "ORACLE_WEBLOGIC_HOME" of files ("/etc/environment"))); folders "C:\Program Files\Oracle\Inventory"; (folders it) of (it as trimmed string) of following texts of firsts "=" of lines containing "inventory_loc" whose(it starts with "inventory_loc") of files "oraInst.loc" of (folders "/etc";folders "/var/opt/oracle") )]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>889257550</DownloadSize>
+		<Source>Oracle</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-08-01</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"14.1.1.0.240711","size":889257550 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp Oracle</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:oracle:oracle_weblogic:14.1.1.0.240711:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Thu, 01 Aug 2024 05:06:23 +0000</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded-id</Name>
+			<Value>710021402</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded_date</Name>
+			<Value>2024-08-08</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch p36830760_141100_Generic.zip sha1:e9b893531c9917563792c73a62b3c4f555cb24f5 size:889257550 https://localhost:52311/Uploads/e9b893531c9917563792c73a62b3c4f555cb24f5/p36830760_141100_Generic.zip sha256:0983234b8fc6a66c3b687d7bdae69460dd3b568924341b0bafed7bdb6cb514bc
+
+// get path to oracle_home folder that needs patched:
+parameter "oracle_home" = "{ unique values of pathnames of (folders it) whose(1 = number of (it as trimmed string) whose(it = "14.1.1.0.0") of preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts " version=" of lines containing "<distribution " whose(it as lowercase contains "installed" AND exists preceding texts whose(it starts with "WebLogic") of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts " name=" of it) of files "registry.xml" of folders "inventory" of it) of /* ORACLE_HOMEs */ preceding texts of firsts ("%22";"'") of following texts of firsts ("%22";"'") of following texts of firsts "LOC" of lines containing "LOC" whose(it as lowercase contains "<home") of files "inventory.xml" of folders "ContentsXML" of /* Oracle inventory_loc */ ( folders "oraInventory" of folders of (folders "/home"; folders "/export/home"; ((folders it) of unique values of (concatenations of substrings separated by "%22" of it) of keys "ORACLE_WEBLOGIC_HOME" of files ("/etc/environment"))); folders "C:\Program Files\Oracle\Inventory"; (folders it) of (it as trimmed string) of following texts of firsts "=" of lines containing "inventory_loc" whose(it starts with "inventory_loc") of files "oraInst.loc" of (folders "/etc";folders "/var/opt/oracle") ) }"
+
+// NOTE: oracle_home path cannot contain a space
+//       if oracle_home contains a space, oracle's own tools will fail!
+continue if { 1 = number of substrings separated by " " of ( parameter "oracle_home" ) }
+
+parameter "oracle_user" = "{ unique values of user names of (folders it) of (parameter "oracle_home") }"
+
+// stage patches in parent folder of oracle_home:
+parameter "patch_tmp" = "{unique values of pathnames of parent folders of (folders it) of (parameter "oracle_home")}/patch_tmp"
+
+// delete patch tmp folder if exists:
+folder delete "{parameter "patch_tmp"}"
+
+// create patch tmp folder:
+folder create "{parameter "patch_tmp"}"
+
+// unpack patch archive to patch_tmp folder:
+wait unzip __Download/p36830760_141100_Generic.zip -d "{parameter "patch_tmp"}"
+
+// TODO: verify exit code is 0
+
+// get path to spbat folder to be used for applying patches:
+parameter "spbat" = "{pathnames of folders "tools/spbat/generic/SPBAT" of folders of (folders it) of (parameter "patch_tmp")}"
+
+delete __createfile
+
+createfile until _END_OF_FILE_
+{{
+cd { parameter "spbat" }
+
+# use `su` to run as oracle_user:
+su {parameter "oracle_user"} -c "./spbat.sh -phase precheck -oracle_home { parameter "oracle_home" }"
+
+echo "exit code for precheck: $?"
+} 2>&1 | tee {parameter "patch_tmp"}/run.log
+_END_OF_FILE_
+
+// change this to be relative to patch_tmp:
+delete "{parameter "patch_tmp"}/run.sh"
+copy __createfile "{parameter "patch_tmp"}/run.sh"
+
+// Change permissions:
+// TODO: determine least permissions required instead of 777:
+wait chmod -R 777 "{parameter "patch_tmp"}"
+
+// run spbat precheck phase:
+override wait
+completion=job
+timeout_seconds=3600
+disposition=terminate
+wait bash "{parameter "patch_tmp"}/run.sh"
+
+continue if { 0 = exit code of action | 999 }
+
+// check for spbat-precheck- log
+continue if { exists files whose(name of it starts with "spbat-precheck-" AND name of it ends with ".log") of folders of folders "logs" of (folders it) of (parameter "spbat") }
+
+// get newest precheck log:
+parameter "spbat-precheck-log" = "{ unique values of pathnames of items 1 of (maxima of modification times of files whose(name of it starts with "spbat-precheck-" AND name of it ends with ".log") of it, files whose(name of it starts with "spbat-precheck-" AND name of it ends with ".log") of it ) whose(item 0 of it = modification time of item 1 of it) of folders of folders "logs" of (folders it) of (parameter "spbat") }"
+
+
+// check if spbat log has errors other than Opatch:
+// [ERROR] - [preReqCheck] : [???]- Opatch version check failed
+continue if { not exists lines containing "[ERROR]" whose(it does not contain "Opatch version check failed") of (files it) of (parameter "spbat-precheck-log")  }
+// if the only error is Opatch, then continue, because SPBAT process will handle the Opatch upgrade automatically.
+
+// Install Patches:
+
+delete __createfile
+
+createfile until _END_OF_FILE_
+{{
+cd { parameter "spbat" }
+
+# use `su` to run as oracle_user:
+su {parameter "oracle_user"} -c "./spbat.sh -phase apply -oracle_home { parameter "oracle_home" }"
+
+echo "exit code for apply: $?"
+} 2>&1 | tee {parameter "patch_tmp"}/run.log
+_END_OF_FILE_
+
+delete "{parameter "patch_tmp"}/run.sh"
+copy __createfile "{parameter "patch_tmp"}/run.sh"
+
+// run spbat precheck phase:
+override wait
+completion=job
+timeout_seconds=3600
+disposition=terminate
+wait bash "{parameter "patch_tmp"}/run.sh"
+
+continue if { 0 = exit code of action | 999 }
+
+// get newest apply log:
+parameter "spbat-apply-log" = "{ unique values of pathnames of items 1 of (maxima of modification times of files whose(name of it starts with "spbat-apply-" AND name of it ends with ".log") of it, files whose(name of it starts with "spbat-apply-" AND name of it ends with ".log") of it ) whose(item 0 of it = modification time of item 1 of it) of folders of folders "logs" of (folders it) of (parameter "spbat") }"
+
+// set exit code to number of lines of spbat-apply-log containing [ERROR]
+exit { number of lines containing "[ERROR]" of (files it) of (parameter "spbat-apply-log") }
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

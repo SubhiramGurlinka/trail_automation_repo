@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: RedHat JBoss EAP v7.3.10 - Linux Unix</Title>
+		<Description><![CDATA[<DIV class=FixletMessage>
+<TABLE>
+<TBODY>
+<TR>
+<TD>
+<P>An updated version of Red Hat JBoss EAP is available. This Fixlet updates version 7.3 --&gt; 7.3.10</P>
+<P><BR><B>Note:</B> Once the update runs successfully, affected computers might report back as 'Pending Restart' but will not report back their final status until the computer is restarted.</P></TD></TR></TBODY></TABLE></DIV>]]></Description>
+		<Relevance>unix of operating system</Relevance>
+		<Relevance><![CDATA[exists (it as version) whose(it = "7.3") of parenthesized parts of matches (regex "Version ([0-9]+\.[0-9]+)\.[0-9]+\.GA") of lines containing "JBoss" of files "version.txt" of folders "/opt/jboss"]]></Relevance>
+		<Relevance><![CDATA[not exists (it as version) whose(it >= "7.3.10") of parenthesized parts of matches (regex "Version ([0-9]+\.[0-9]+\.[0-9]+)\.GA") of lines containing "JBoss" of files "version.txt" of folders "/opt/jboss"]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>165788572</DownloadSize>
+		<Source>RedHat</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2023-08-01</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"7.3.10","size":165788572 }
+</Value>
+		</MIMEField>
+
+				<MIMEField>
+					<Name>x-fixlet-cpe23-item-name</Name>
+					<Value><![CDATA[cpe:2.3:a:redhat:redhat_jboss:7.3.10:*:*:*:*:*:*:*]]></Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Wed, 02 Aug 2023 02:53:46 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<Action ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to execute this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch jboss-eap-7.3.10-patch.zip sha1:7bd55e6de7405111b3b69c61f3e5c333a9d82673 size:165788572 https://localhost:52311/Uploads/7bd55e6de7405111b3b69c61f3e5c333a9d82673/jboss-eap-7.3.10-patch.zip sha256:1b8b25ee752d425fd29138f6ff5d6f0e92e8bc2f96b602ca62b64673e565e239
+
+// set Websphere Application Server directory:
+parameter "bindir" = "/opt/jboss/bin/"
+
+// stage patches in temporary patch directory:
+parameter "patch_tmp" = "/opt/jboss/patch_tmp"
+
+// delete patch tmp folder if exists:
+folder delete "{parameter "patch_tmp"}"
+
+// create patch tmp folder:
+folder create "{parameter "patch_tmp"}"
+
+// move patch zip into patch_tmp:
+wait mv __Download/jboss-eap-7.3.10-patch.zip {parameter "patch_tmp"}
+
+delete __createfile
+
+createfile until _END_OF_FILE_
+
+cd { parameter "bindir" }
+
+./jboss-cli.sh "patch apply { parameter "patch_tmp" }/jboss-eap-7.3.10-patch.zip" >> { parameter "patch_tmp" }/run.log
+
+
+_END_OF_FILE_
+
+// change this to be relative to patch_tmp:
+delete "{parameter "patch_tmp"}/run.sh"
+copy __createfile "{parameter "patch_tmp"}/run.sh"
+
+// Change permissions:
+// TODO: determine least permissions required instead of 777:
+wait chmod -R 777 "{parameter "patch_tmp"}"
+
+// run patch application
+override wait
+completion=job
+timeout_seconds=3600
+disposition=terminate
+wait bash "{parameter "patch_tmp"}/run.sh" >> {parameter "patch_tmp"}/run.log
+
+continue if { exists files whose (name of it starts with "run" AND content of it contains "success") of folder (parameter "patch_tmp") }
+
+continue if { 0 = exit code of action }
+
+// End]]></ActionScript>
+		</Action>
+	</Fixlet>
+</BES>

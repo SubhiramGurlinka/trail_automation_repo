@@ -1,0 +1,11 @@
+---
+- search: This Task
+  replacement: This Fixlet
+- search: <Task>
+  replacement: <Fixlet>
+- search: </Task>
+  replacement: </Fixlet>
+- search: "		]]></Description>"
+  replacement: "]]></Description>"
+- search: "]]>			</ActionScript>"
+  replacement: "]]></ActionScript>"

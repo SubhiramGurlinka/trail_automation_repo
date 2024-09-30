@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: OracleJDK v17.0.12 - RHEL Family (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "OracleJDK v17.0.12" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 182484307
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual backup of System Preferences (if any).</li>		</ul>
+]]></Description>
+		<Relevance><![CDATA[(exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Linux SuSE|Red Hat Enterprise( [a-zA-Z]*)?)") of name of it AND architecture of it = "x86_64") of operating system]]></Relevance>
+		<Relevance><![CDATA[exists versions whose(it as string starts with "17") of packages whose(name of it starts with "jdk") of rpms]]></Relevance>
+		<Relevance><![CDATA[not exists (it as version) whose(it >= "17.0.12") of first matches (regex "[0-9]+(\.[0-9]+)+") of ((it as string) of packages whose (name of it starts with "jdk") of rpm)]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>182484307</DownloadSize>
+		<Source>Oracle</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-07-22</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"17.0.12","size":182484307 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp Oracle</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:oracle:oraclejdk:17.0.12:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 22 Jul 2024 05:47:02 +0000</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded-id</Name>
+			<Value>7100702</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded_date</Name>
+			<Value>2024-07-22</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  v17.0.12.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch jdk-17_linux-x64_bin.rpm sha1:6ad662df0d83fbb9d264fdd38dce0ed1ce2cec78 size:182484307 https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.rpm sha256:2c1b2c787bde7e20b4469072c5456ec738c87e3cc0985c8c56a5c0eb6f04174d
+
+wait /bin/bash -c "cd './__Download' && /usr/bin/rpm -Uvh *.rpm"
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

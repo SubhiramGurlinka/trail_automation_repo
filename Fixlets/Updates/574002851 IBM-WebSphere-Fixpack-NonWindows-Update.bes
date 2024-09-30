@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: IBM WebSphere Application Server v8.5.5025.20240119 - Linux Unix</Title>
+		<Description><![CDATA[
+<P>IBM WebSphere Application Server Interim Fix 8.5.5025.20240119 is available. Use the action below to update WebSphere Application Server Base Edition or Network Deployment Edition to the latest version.</P>
+<p><strong>Note:</strong>
+<ul>
+<p> This fixlet supports the installation of IBM Websphere in the folders "/opt/IBM" and "/usr/IBM".</p>
+<p>Please ensure that the permissions and file paths for installations and patch upgrades are accurate, as the current fixlet checks installations in designated directories.</p>
+</ul>
+]]></Description>
+		<Relevance>unix of operating system</Relevance>
+		<Relevance><![CDATA[exists lines containing "com.ibm.websphere." whose ( ( it contains "com.ibm.websphere.BASE" OR it contains "com.ibm.websphere.ND" ) and it contains "8.5") of files "installed.xml" of folders ("/opt/IBM/WebSphere/AppServer/properties/version";"/usr/IBM/WebSphere/AppServer/properties/version")]]></Relevance>
+		<Relevance><![CDATA[not exists (it as version) whose(it >= "8.5.5025.20240119") of first matches (regex "([0-9]+(\.[0-9]+)+)") of following texts of firsts "version" of it whose(it contains "package " AND it contains "offering") of lines containing "com.ibm.websphere." of files "installed.xml" of folders ("/opt/IBM/WebSphere/AppServer/properties/version";"/usr/IBM/WebSphere/AppServer/properties/version")]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>1099350337</DownloadSize>
+		<Source>IBM</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-05-23</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"8.5.5025.20240119","size":1099350337 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp IBM</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:ibm:ibm_websphere:8.5.5025.20240119:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Thu, 23 May 2024 09:56:21 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<Action ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to execute this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+
+prefetch 8.5.5-WS-WAS-FP025-part1.zip sha1:cd13bca841a70cbfee358bd7ab753f69f986e7f2 size:1099350337 https://localhost:52311/Uploads/cd13bca841a70cbfee358bd7ab753f69f986e7f2/8.5.5-WS-WAS-FP025-part1.zip sha256:de86032803b6030531c042c8bab3facd0743f6268fd423af6d7bdcd1466319f2
+prefetch 8.5.5-WS-WAS-FP025-part3.zip sha1:74a6e7391282ef816eb580477709bf9a1afcaadf size:1978441492 https://localhost:52311/Uploads/74a6e7391282ef816eb580477709bf9a1afcaadf/8.5.5-WS-WAS-FP025-part3.zip sha256:24cfc641429856a8081651c88343bcab02b4c8d20e1ce253f09fb68115bd969e
+prefetch 8.5.5-WS-WAS-FP025-part2.zip sha1:324e5d5d0a77f5169460862bf2e7e5c409901165 size:198922010 https://localhost:52311/Uploads/324e5d5d0a77f5169460862bf2e7e5c409901165/8.5.5-WS-WAS-FP025-part2.zip sha256:49af24448bc7bca5ecc60e9ed1d3d32d789b3607b9fe110fcfaa2e2892e45474
+
+// set Websphere Application Server directory:
+parameter "installdir" =  "{ parent folder of parent folder of parent folder of file "installed.xml" whose (exists lines whose ( ( it contains "com.ibm.websphere.BASE" OR it contains "com.ibm.websphere.ND" ) and it contains "8.5") of it) of folders ("/opt/IBM/WebSphere/AppServer/properties/version";"/usr/IBM/WebSphere/AppServer/properties/version") }"
+
+// stage patches in temporary patch directory:
+parameter "patch_tmp" = "/opt/IBM/patch_tmp"
+
+// delete patch tmp folder if exists:
+folder delete "{parameter "patch_tmp"}"
+
+// create patch tmp folder:
+folder create "{parameter "patch_tmp"}"
+
+// unpack patch archive to patch_tmp directory:
+wait unzip __Download/8.5.5-WS*.zip -d "{parameter "patch_tmp"}"
+
+// set path to IMCL
+parameter "imcldir" = "/opt/IBM/InstallationManager/eclipse/tools/"
+
+// set path to repository directory
+parameter "repodir" = "{parameter "patch_tmp"}"
+
+
+// Run imcl to list available repositories and ensure 8.5.5025.20240119 exists and exit code is 0
+
+delete __createfile
+
+createfile until _END_OF_FILE_
+
+cd { parameter "imcldir" }
+
+./imcl listAvailablePackages -repositories { parameter "repodir"} >>{ parameter "patch_tmp" }/run.log
+
+_END_OF_FILE_
+
+// change this to be relative to patch_tmp:
+delete "{parameter "patch_tmp"}/run.sh"
+copy __createfile "{parameter "patch_tmp"}/run.sh"
+
+// Change permissions:
+// TODO: determine least permissions required instead of 777:
+wait chmod -R 777 "{parameter "patch_tmp"}"
+
+// run patch application
+override wait
+completion=job
+timeout_seconds=3600
+disposition=terminate
+wait bash "{parameter "patch_tmp"}/run.sh" >> {parameter "patch_tmp"}/run.log
+
+continue if { 0 = exit code of action | 999 }
+
+continue if { exists files whose (name of it starts with "run" AND content of it contains "5025") of folder (parameter "patch_tmp") }
+
+parameter "InstallType" = "{ unique values of parenthesized parts of first matches (regex "com.ibm.websphere\.([A-Z]+)\.") of following texts of firsts " id" of it whose(it contains "com.ibm.websphere." AND it contains "package " AND it contains "offering") of lines containing "com.ibm.websphere." of files "installed.xml" of folders ("/opt/IBM/WebSphere/AppServer/properties/version";"/usr/IBM/WebSphere/AppServer/properties/version") }"
+
+parameter "patchlist" = "{ lines whose (it contains ( (parameter "InstallType") & ".v85") ) of files "/opt/IBM/patch_tmp/run.log" }"
+
+delete __createfile
+
+createfile until _END_OF_FILE_
+
+cd { parameter "imcldir" }
+
+./imcl install {parameter "patchlist"} -repositories { parameter "repodir"} -installationDirectory {parameter "installdir"} -acceptLicense -sP  >>{ parameter "patch_tmp" }/patchrun.log
+
+_END_OF_FILE_
+
+// change this to be relative to patch_tmp:
+delete "{parameter "patch_tmp"}/run.sh"
+copy __createfile "{parameter "patch_tmp"}/run.sh"
+
+// Change permissions:
+// TODO: determine least permissions required instead of 777:
+wait chmod -R 777 "{parameter "patch_tmp"}"
+
+// run patch application
+override wait
+completion=job
+timeout_seconds=3600
+disposition=terminate
+wait bash "{parameter "patch_tmp"}/run.sh" >> {parameter "patch_tmp"}/run.log
+
+continue if { 0 = exit code of action | 999 }
+
+// End]]></ActionScript>
+		</Action>
+	</Fixlet>
+</BES>

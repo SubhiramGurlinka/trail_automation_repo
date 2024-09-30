@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: MongoDB v7.0.12 - Ubuntu 20.04 (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "MongoDB v7.0.12" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 53130720
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual database back up.</li>		</ul>
+]]></Description>
+		<Relevance>((exists match (regex "Ubuntu( Server|)( LTS|) (20.04)") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists package "mongodb-org" of debianpackages]]></Relevance>
+
+				<Relevance><![CDATA[not exists package "mongodb-org" whose (version of it >= "7.0.12") of debianpackages]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>53130720</DownloadSize>
+		<Source>MongoDB</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-06-28</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"7.0.12","size":53130720 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp MongoDB</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:mongodb:mongodb:7.0.12:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 22 Jul 2024 09:05:54 +0000</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded-id</Name>
+			<Value>5700601</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded_date</Name>
+			<Value>2024-07-22</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  Community Edition v7.0.12.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch mongodb-database-tools_100._ubuntu_focal.x86_64.deb sha1:b33503a957784043c3db5e3fa0891ca1a5fb621f size:53130720 https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/7.0/multiverse/binary-amd64/mongodb-database-tools_100.9.5~90481484_amd64.deb sha256:884519c7d3c52a21cfaa9a84756eb6fdd6b93e959e3b1920b93c97d4906cc653
+prefetch mongodb-mongosh__ubuntu_focal.x86_64.deb sha1:0de87206300930917520b532b8b2dcf2afb58deb size:53452816 https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/7.0/multiverse/binary-amd64/mongodb-mongosh_2.2.12_amd64.deb sha256:e40ae5ac13ed8ee1b5fd241f996bd4fb7841d2ff06d3aec8b8326e3efccf1243
+prefetch mongodb-org-tools__ubuntu_focal.x86_64.deb sha1:f54e23f5df47f04c7912501e1f13af4b3fc1c121 size:2896 https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/7.0/multiverse/binary-amd64/mongodb-org-tools_7.0.12_amd64.deb sha256:74207a87ac458a9688327becf6c55ce16f0132d971b5c73b154ea9118942ff25
+prefetch mongodb-org__ubuntu_focal.x86_64.deb sha1:040a8be7f737d9127ec469f9ee499aa36b7cf52e size:2932 https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/7.0/multiverse/binary-amd64/mongodb-org_7.0.12_amd64.deb sha256:4eceed7c39bf317de0a81c30a66ec77dd0f6f705471ad0faf06f7cc631209fcb
+prefetch mongodb-org-database__ubuntu_focal.x86_64.deb sha1:1c5bc973418e2731558062ce0ce6b691c74bc212 size:3544 https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/7.0/multiverse/binary-amd64/mongodb-org-database_7.0.12_amd64.deb sha256:17eb9bf1160d6c42a0cd3f8a41f11a0f79919f23542a95655a3b709bccf7362b
+prefetch mongodb-org-database-tools-extra__ubuntu_focal.x86_64.deb sha1:11686eea05bc791539db1b9b5829dc2048a0c0ad size:7752 https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/7.0/multiverse/binary-amd64/mongodb-org-database-tools-extra_7.0.12_amd64.deb sha256:11f89c3f488c37ddd6eb21149a126d7a29051bbb58d81ec24ed8f3f87fe1eeb7
+prefetch mongodb-org-mongos__ubuntu_focal.x86_64.deb sha1:37e74b8d99d7637187384691b89a63127023d613 size:23473552 https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/7.0/multiverse/binary-amd64/mongodb-org-mongos_7.0.12_amd64.deb sha256:8e9ff0abd168c37c1c573bee17540cff0e93ce90776a64085cbe9f3ea0639d5e
+prefetch mongodb-org-server__ubuntu_focal.x86_64.deb sha1:6ec780ea94a6fa1fbe5e88ed1e6af8346b12c1a1 size:34024492 https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/7.0/multiverse/binary-amd64/mongodb-org-server_7.0.12_amd64.deb sha256:08eb19e2af172cd586742e8059407e91b060abcd2f587d50bc2921b308d37f5a
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1119/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) focal") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*rpm"
+continue if {exit code of action = 0}
+
+
+elseif {((exists match (regex "SuSE.* (focal)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*rpm"
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) (20.04)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait /bin/bash "./__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*deb"
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

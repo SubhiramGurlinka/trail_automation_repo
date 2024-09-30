@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Analysis>
+		<Title>Oracle Info</Title>
+		<Description><![CDATA[Properties related to Oracle installations and their patch level.]]></Description>
+		<Relevance>exists file "SIDLIST.txt" of folder "ORACLE" of parent folder of data folder of client</Relevance>
+		<Source>Internal</Source>
+		<SourceReleaseDate>2023-08-05</SourceReleaseDate>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Sat, 05 Aug 2023 14:02:01 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<Property Name="Patch Level" ID="1"><![CDATA[concatenation ", " of ((if it starts with "19." then "19c" else if it starts with "18." then "18c" else if it starts with "12.1" then "12c" else if it starts with "12.2" then "12cR2" else if it starts with "11.2" then "11g" else it) of preceding text of last "." of following text of first "-" of item 0 of it & ":" & item 1 of it) of (name of it, line 1 of it) of files whose (name of it starts with "PATCHLEVEL-" and name of it ends with ".txt") of folder "ORACLE" of parent folder of data folder of client]]></Property>
+		<Property Name="SID Count" ID="2"><![CDATA[concatenation ", " of (multiplicity of it as string & "x" & it) of unique values of (if it starts with "19." then "19c" else if it starts with "18." then "18c" else if it starts with "12.1" then "12c" else if it starts with "12.2" then "12cR2" else if it starts with "11.2" then "11g" else it) of (tuple string item 2 of concatenation ", " of substrings separated by (if windows of operating system then "," else ":") of it) of lines whose (it does not start with "#" and it does not start with "+" and it does not start with "-") of file "SIDLIST.txt" of folder "ORACLE" of parent folder of data folder of client]]></Property>
+		<Property Name="SID Detail" ID="3"><![CDATA[concatenation ", " of ((if it starts with "19." then "19c" else if it starts with "18." then "18c" else if it starts with "12.1" then "12c" else if it starts with "12.2" then "12cR2" else if it starts with "11.2" then "11g" else it) of tuple string item 2 of it & ":" & tuple string item 0 of it) of (concatenation ", " of substrings separated by (if windows of operating system then "," else ":") of it) of lines whose (it does not start with "#" and it does not start with "+" and it does not start with "-") of file "SIDLIST.txt" of folder "ORACLE" of parent folder of data folder of client]]></Property>
+		<Property Name="SID Status" ID="4"><![CDATA[concatenation ", " of ((if it starts with "19." then "19c" else if it starts with "18." then "18c" else if it starts with "12.1" then "12c" else if it starts with "12.2" then "12cR2" else if it starts with "11.2" then "11g" else it) of tuple string item 2 of it & ":" & tuple string item 0 of it & ":" & (if tuple string item 5 of it < tuple string item 6 of it then tuple string item 5 of it else tuple string item 6 of it)) of (concatenation ", " of substrings separated by (if windows of operating system then "," else ":") of it) of lines whose (it does not start with "#" and it does not start with "+" and it does not start with "-") of file "SIDLIST.txt" of folder "ORACLE" of parent folder of data folder of client]]></Property>
+	</Analysis>
+</BES>

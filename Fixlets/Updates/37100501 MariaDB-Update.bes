@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: MariaDB v10.10.2 - Ubuntu 18.04 (x64)</Title>
+		<Description><![CDATA[
+<div>
+  This Fixlet
+  will download and
+  update
+
+  "MariaDB v10.10.2" onto selected endpoints.
+  <br /><br /><b>Download Size:</b> 62863360
+
+  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+</div>]]></Description>
+		<Relevance>((exists match (regex "Ubuntu( Server|)( LTS|) (18.04)") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists package "mariadb-server" of debianpackages]]></Relevance>
+
+				<Relevance><![CDATA[not exists package "mariadb-server" whose (version of it >= "10.10.2") of debianpackages]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>62863360</DownloadSize>
+		<Source>MariaDB</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2022-11-28</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"10.10.2","size":62863360 }
+</Value>
+		</MIMEField>
+
+				<MIMEField>
+					<Name>x-fixlet-cpe23-item-name</Name>
+					<Value><![CDATA[cpe:2.3:a:mariadb:mariadb:10.10.2:*:*:*:*:*:*:*]]></Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 28 Nov 2022 19:13:00 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  v10.10.2.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch mariadb-LATESTVER-ubuntu-bionic-amd64-debs.tar sha1:122155c2078c83c0c48101745be4071259c901f4 size:62863360 https://downloads.mariadb.com/MariaDB/mariadb-10.10.2/repo/ubuntu/mariadb-10.10.2-ubuntu-bionic-amd64-debs.tar sha256:43f6fe1ddd5e0a52f6fd6e45dc0c8e291dea62a9168775801cbf8197aff2ae9b
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1098/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Oracle Enterprise|CCentOS|Red Hat Enterprise( [a-zA-Z]*)?) bionic") of name of it) AND (architecture of it = "x86_64")) of operating system}
+wait tar -xvf  {pathname of client folder of current site}/__Download/mariadb-LATESTVER-ubuntu-bionic-amd64-debs.tar -C {pathname of client folder of current site}/__Download/
+
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-common*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mysql-common*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-client*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/libmysqlclient18*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-server*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-backup*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/galera-4*rpm
+continue if {exit code of action = 0}
+
+
+elseif {((exists match (regex "SuSE.* (bionic)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait tar -xvf  {pathname of client folder of current site}/__Download/mariadb-LATESTVER-ubuntu-bionic-amd64-debs.tar -C {pathname of client folder of current site}/__Download/
+
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-common*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mysql-common*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-client*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/libmysqlclient18*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-server*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-backup*rpm
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/galera-4*rpm
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) (18.04)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait tar -xvf  {pathname of client folder of current site}/__Download/mariadb-LATESTVER-ubuntu-bionic-amd64-debs.tar -C {pathname of client folder of current site}/__Download/
+
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-common*deb
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mysql-common*deb
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-client*deb
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/libmysqlclient18*deb
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-server*deb
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/mariadb-backup*deb
+continue if {exit code of action = 0}
+wait /bin/bash "{pathname of client folder of current site}/__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} {pathname of client folder of current site}/__Download/galera-4*deb
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

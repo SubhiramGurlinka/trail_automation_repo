@@ -1,0 +1,2028 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Task>
+		<Title>Update OracleDB Patch List and update scripts (ASM/RAC)</Title>
+		<Description><![CDATA[<P><FONT color=#0000ff size=3>Update Oracle Patch List and update scripts</FONT></P>
+<P><EM>This task MUST be run before any of the precheck, patch, or rollback fixlets are deployed!</EM></P>
+<P>This task writes the following files in the<FONT face=Courier> /var/opt/BESClient/ORACLE</FONT> directory:</P>
+<UL>
+<LI>SIDLIST.txt - contains information for all oracle homes and their databases, read from the oratab file.
+<LI>PATCHLIST-&lt;oracle version&gt;.txt - contains the output of `opatch lspatches` for each oracle home.
+<LI>PATCHLEVEL-&lt;oracle-version&gt;.txt - contains the patch level (e.g. 2022-07) of the oracle home.&nbsp; This is used for determining the applicability of the precheck, patch, and rollback fixlets.
+<LI>The non-version-specific shell script files which are used in all of the precheck, patch, and rollback fixlets.</LI>
+</UL>
+<P><EM>This task is intended to be run as a policy action daily on all ASM and RAC Oracle servers.</EM></P>
+<P><FONT color=#ff0000>If this task fails with an exit code of 99, that means no databases were found in the oratab file -- fix oratab and re-run the task.</FONT></P>]]></Description>
+		<Relevance>exists file (if exists file "/etc/oratab" then "/etc/oratab" else "/var/opt/oracle/oratab") whose (exists line whose (it starts with "+ASM" and it contains ":") of it and exists line whose (it does not start with "+" and it does not start with "-" and it does not start with "#" and it contains ":") of it)</Relevance>
+		<Category></Category>
+		<DownloadSize>0</DownloadSize>
+		<Source>HCL</Source>
+		<SourceID></SourceID>
+		<SourceReleaseDate>2024-03-01</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Tue, 30 Apr 2024 09:46:42 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+parameter "ODIR"="{ pathname of parent folder of data folder of client & "/ORACLE" }"
+
+if { not exists folder (parameter "ODIR") }
+  folder create "{parameter "ODIR"}"
+endif
+wait chmod 777 "{parameter "ODIR"}"
+
+// UPDATE.sh updates the patch list files, which can be used for targeting the patch fixlets.
+// It also updates the SIDLIST.txt file, which is an enhanced copy of the oratab file.
+// And it updates PATCHLEVEL-<oracleversion>.txt which is now used for targeting.
+// If there is no oratab, or if the oratab is empty, the update task will fail.
+createfile until _EOF_
+if [[ "`uname`" == "SunOS" ]]; then
+  export PATH=/usr/xpg4/bin:$PATH
+fi
+
+function get_patchlevel {{
+# $1 line to extract patchlevel from
+  regex="[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+"
+  if [[ $1 =~ $regex ]]; then
+    patchlevel=`echo "${{BASH_REMATCH[0]}" | cut -d '.' -f 5`
+    patchlevel="20${{patchlevel:0:2}-${{patchlevel:2:2}"
+  else
+    patchlevel="0"
+  fi
+}
+
+OFOLDER="/var/opt/BESClient/ORACLE"
+cd $OFOLDER
+OFILE=$OFOLDER/SIDLIST.txt
+echo '# SID:ORACLE_HOME:OH_VER:OH_USER:OH_OPATCH_VER:OH_PSU_LEVEL:OH_JVM_LEVEL' > $OFILE
+chmod 766 $OFILE
+if [[ -f /etc/oratab ]]; then
+  oratab=/etc/oratab
+else
+  oratab=/var/opt/oracle/oratab
+fi
+echo "Running _pmon_ processes:"
+ps -ef | grep -v grep | grep _pmon_
+echo
+echo "Contents of $oratab:"
+cat $oratab
+
+for oline in `cat $oratab | grep ':' | grep -v '^[\#\-]' | cut -d '#' -f 1`; do
+  echo
+  echo "$oratab line:"
+  echo "$oline"
+  SID=`echo $oline | cut -d ':' -f 1`
+  OH=`echo $oline | cut -d ':' -f 2`
+  export ORACLE_HOME=$OH
+  export ORACLE_SID=$SID
+  echo "Home:"
+  ls -ld $OH
+  DBUSER=`ls -ld $OH | awk '{{print $3}'`
+  if [[ "$DBUSER" == "root" ]]; then
+    echo "WARNING: $ORACLE_SID home $ORACLE_HOME owner is root!"
+    DBPS=`ps -ef | grep -v grep | grep _pmon_$ORACLE_SID | awk '{{print $1}' | head -1`
+    if [[ "$DBPS" != "" ]]; then
+      DBUSER=$DBPS
+      echo "Got owner $DBPS from _pmon_$ORACLE_SID process; using that instead"
+    else
+      echo "WARNING: Unable to get owner of _pmon_$ORACLE_SID process (is it up?)"
+      echo "WARNING: Commands for $ORACLE_SID will be run as $DBUSER (this may go badly)"
+    fi
+  fi
+  OVER=`su $DBUSER -c "export ORACLE_HOME=$ORACLE_HOME; $ORACLE_HOME/bin/sqlplus -v" | grep 'SQL\*Plus: Release ' | cut -d ' ' -f 3 | cut -d '.' -f 1,2,3,4`
+  if [[ "$SID" == "+ASM"* ]]; then
+    PFILE=PATCHLIST-$SID-$OVER.txt
+  else
+    PFILE=PATCHLIST-$OVER.txt
+  fi
+  echo "Patches:"
+  su $DBUSER -c "export ORACLE_HOME=$ORACLE_HOME; $ORACLE_HOME/OPatch/opatch lspatches | grep ';'" > $OFOLDER/$PFILE
+  chmod 766 $OFOLDER/$PFILE
+  cat $OFOLDER/$PFILE
+  OPATCH=`$ORACLE_HOME/OPatch/opatch version | grep 'OPatch Version:' | cut -d ':' -f 2 | xargs`
+  get_patchlevel "`cat $OFOLDER/$PFILE | grep -iE 'Database Patch Set Update|Database.* Release Update'`"
+  LEVELP=$patchlevel
+  get_patchlevel "`cat $OFOLDER/$PFILE | grep -iE 'OJVM|Oracle JavaVM'`"
+  LEVELJ=$patchlevel
+  if [[ "$SID" == "+ASM"* ]]; then
+    LEVELJ="n/a"
+  fi
+  echo "SID:  $SID"
+  echo "HOME: $OH"
+  echo "VER:  $OVER"
+  echo "USER: $DBUSER"
+  echo "OP:   $OPATCH"
+  echo "PSU:  $LEVELP"
+  echo "JVM:  $LEVELJ"
+  echo "$SID:$OH:$OVER:$DBUSER:$OPATCH:$LEVELP:$LEVELJ" >> $OFILE
+  if [[ "`ps -ef | grep -v grep | grep -c _pmon_$SID`" == "0" ]]; then
+    echo "WARNING: $SID appears to be down!"
+  else
+    echo "$SID appears to be up"
+  fi
+done
+echo
+echo "$OFILE:"
+cat $OFILE
+echo
+if [[ "`cat $OFILE | grep -v '#' | grep -c ':'`" -eq "0" ]]; then
+  echo "ERROR: No databases found in $oratab"
+  exit 99
+fi
+for OVER in `cat $OFILE | grep -v '#' | cut -d ':' -f 3 | sort -u`; do
+  echo "Determining patch level for $OVER"
+  LEVEL=""
+  for OHOME in `cat $OFILE | grep -v '#' | grep ":$OVER:" | cut -d ':' -f 2,3,4,5,6,7 | sort -u`; do
+    echo "Checking $OHOME"
+    DBUSER=`echo $OHOME | cut -d ':' -f 3`
+    LEVELP=`echo $OHOME | cut -d ':' -f 5`
+    LEVELJ=`echo $OHOME | cut -d ':' -f 6`
+    if [[ "$LEVEL" == "" || "$LEVELP" < "$LEVEL" ]]; then
+      LEVEL=$LEVELP
+    fi
+    if [[ "$LEVELJ" < "$LEVELP" ]]; then
+      LEVEL=$LEVELJ
+    fi
+  done
+  echo "$OVER patch level: $LEVEL"
+  PFILE=$OFOLDER/PATCHLEVEL-$OVER.txt
+  echo "$LEVEL" > $PFILE
+  chmod 766 $PFILE
+done
+echo
+_EOF_
+delete {parameter "ODIR"}/UPDATE.sh
+move __createfile {parameter "ODIR"}/UPDATE.sh
+wait chmod 755 {parameter "ODIR"}/UPDATE.sh
+wait bash -c "{parameter "ODIR"}/UPDATE.sh > {parameter "ODIR"}/UPDATE.log 2>&1"
+parameter "exitcode"="{ exit code of action }"
+wait chmod 766 {parameter "ODIR"}/UPDATE.log
+
+
+// This is used to write the status to a file for reporting.
+createfile until _EOF_
+# parameters: $1 oracle version, $2 patch level, $3 operation (precheck/patch/rollback), $4 exitcode
+OFOLDER={parameter "ODIR"}
+statusfile=$OFOLDER/STATUS.txt
+cp -f $statusfile $statusfile.bak
+operation=`echo $3 | tr [:lower:] [:upper:]`
+timefinished=`date +'%Y-%m-%d %H:%M'`
+timestarted=`cat $OFOLDER/$operation-$1.log | grep -i "BEGIN $operation" | awk '{{print $1,$2}'`
+if [[ "$timestarted" == "" ]]; then
+  timestarted="? ?"
+fi
+OARCH={ (if exists line whose (it starts with "+ASM:") of it then "ASM" else if exists line whose (it starts with "+ASM") of it then "RAC" else "SDB") of file "SIDLIST.txt" of folder "ORACLE" of parent folder of data folder of client }
+echo "$1 $2 $timestarted $timefinished $OARCH $operation $4" > $statusfile
+cat $statusfile.bak | grep -v "$1 $2" >> $statusfile
+_EOF_
+delete "{parameter "ODIR"}/STATUS.sh"
+move __createfile "{parameter "ODIR"}/STATUS.sh"
+
+
+// This does the patch downloading via curl.
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+umask 0022
+
+function checkfile {{
+# parameters: $1 file $2 size $3 sha1
+  fileok=0
+  filepath=$BASEFOLDER/$1
+  if [[ -f "$filepath" ]]; then
+    echo "$1 exists"
+    fsize=`ls -l $filepath | awk '{{print $5}'`
+    echo "$1 size: $fsize"
+    if [[ "$fsize" -eq "$2" ]]; then
+      echo "$1 size PASS"
+     if [[ "`which sha1sum`" != "" ]]; then
+        fhash=`sha1sum $filepath | awk '{{print $1}'`
+	    echo "$1 sha1: $fhash"
+      elif [[ "`which shasum`" != "" ]]; then
+        fhash=`shasum $filepath | awk '{{print $1}'`
+	    echo "$1 sha1: $fhash"
+      else
+        fhash=""
+        echo "no sha1sum or shasum found in path"
+      fi
+      if [[ "$fhash" == "$3" || "$3" == "" ]]; then
+        echo "$1 sha1 PASS"
+        fileok=1
+      else
+        echo "$1 sha1 FAIL"
+      fi
+    else
+      echo "$1 size FAIL"
+    fi
+  else
+    echo "$1 exist FAIL"
+  fi
+  return $fileok
+}
+
+function downloadfile {{
+# parameters: $1 file $2 url $3 exit code if fail $4 size $5 sha1
+  checkfile $1 $4 $5
+  if [[ "$fileok" != "1" ]]; then
+    echo "Downloading from $2"
+    curl --retry 5 --retry-delay 30 -o $BASEFOLDER/$1 $2
+    #curl --retry 5 --retry-delay 30 -m 600 -o $BASEFOLDER/$1 $2
+    checkfile $1 $4 $5
+    if [[ "$fileok" != "1" ]]; then
+      echo "Exiting with code $3"
+      exit $3
+    fi
+  fi
+}
+
+if [[ "`which curl`" == "" ]]; then
+  echo "curl not found"
+  echo "Exiting with code 100"
+  exit 100
+fi
+
+if [[ "$OPATCHURL" != "" ]]; then
+  downloadfile $OPATCHFILE $OPATCHURL 101 $OPATCHSIZE $OPATCHSHA1
+fi
+
+if [[ -d "$BASEFOLDER/$PATCHID" ]]; then
+  echo "$BASEFOLDER/$PATCHID exists"
+else
+  checkspace $BASEFOLDER $PATCHSIZE 103
+  downloadfile $PATCHFILE $PATCHURL 102 $PATCHSIZE $PATCHSHA1
+fi
+exit 0
+_EOF_
+delete "{parameter "ODIR"}/DOWNLOAD.sh"
+move __createfile "{parameter "ODIR"}/DOWNLOAD.sh"
+
+
+// This script unzips the main patch into the target folder.
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+chmod -R 777 $BASEFOLDER
+chown $DBUSER:$OINSTALL $BASEFOLDER/*.zip
+unzipped=`unzip -l $BASEFOLDER/$PATCHFILE | tail -1 | awk '{{print $1}'`
+echo "$PATCHFILE unzipped will be $unzipped bytes"
+checkspace $BASEFOLDER $(($unzipped + 10000)) 104
+unzip -o -d $BASEFOLDER $BASEFOLDER/$PATCHFILE
+zipgood=$?
+chown -R $DBUSER:$OINSTALL $BASEFOLDER/$PATCHID
+chmod -R 777 $BASEFOLDER
+if [[ "$zipgood" -eq "0" && -d "$BASEFOLDER/$PATCHID" ]]; then
+  echo "$PATCHFILE unzipped to $BASEFOLDER/$PATCHID"
+else
+  echo "$PATCHFILE unzip FAILED"
+  exit 105
+fi
+rm -f $BASEFOLDER/$PATCHFILE
+chown $DBUSER:$OINSTALL $OFOLDER/UNZIP-$ORACLE_VER.log
+exit 0
+_EOF_
+delete "{parameter "ODIR"}/UNZIP.sh"
+move __createfile "{parameter "ODIR"}/UNZIP.sh"
+
+
+// This set of functions is used in all the patch/precheck/postcheck scripts. It 'include's the version-specific file that sets all the patch IDs etc.
+createfile until _EOF_
+OFOLDER={parameter "ODIR"}
+cd $OFOLDER
+echo "Running in $OFOLDER"
+
+. {parameter "ODIR"}/INCLUDE-$ORACLE_VER.sh
+cat {parameter "ODIR"}/INCLUDE-$ORACLE_VER.sh
+
+umask 0022
+MINGB=10
+DBTIMEOUT=600
+chmod -R 777 $BASEFOLDER
+if [[ "$ERROR" == "" ]]; then
+  ERROR=0
+fi
+if [[ "$BADSIDS" == "" ]]; then
+  BADSIDS=0
+fi
+
+# use C locale so numbers don't get funny when checking disk space etc.
+echo "Setting locale to C"
+#unset LC_ALL LANG LC_CTYPE LC_COLLATE LC_NUMERIC LC_TIME LC_MONETARY LC_MESSAGES
+export LC_ALL=C
+export LANG=C
+#locale
+
+function stamp {{
+# parameters: $1 label (optional)
+  echo "`date +'%Y-%m-%d %H:%M'` $1"
+}
+
+stamp "[SIDLIST] Contents of $OFOLDER/SIDLIST.txt:"
+cat $OFOLDER/SIDLIST.txt
+echo
+ARCH=`uname`
+if [[ "$ARCH" == "SunOS" ]]; then
+  export PATH=/usr/xpg4/bin:$PATH
+fi
+echo "Server is `hostname` running Oracle $ORACLE_VER on $ARCH"
+
+if [[ "`cat $OFOLDER/SIDLIST.txt | grep -c '^+ASM:'`" -gt "0" ]]; then
+  OARCH=ASM
+elif [[ "`cat $OFOLDER/SIDLIST.txt | grep -c '^+ASM'`" -gt "0" ]]; then
+  OARCH=RAC
+else
+  OARCH=SDB
+fi
+echo "Oracle arch is $OARCH"
+
+# Get oracle installation group
+ORACLE_HOME=`cat $OFOLDER/SIDLIST.txt | grep -v '^#' | grep -v '^-' | grep -v '^+' | grep ":$ORACLE_VER:" | cut -d ':' -f 2 | head -1`
+OINSTALL=`cat $ORACLE_HOME/oraInst.loc | grep 'inst_group=' | cut -d '=' -f 2`
+if [[ "$OINSTALL" == "" ]]; then
+  echo "Could not determine Oracle group from inventory; using default"
+  OINSTALL="oinstall"
+fi
+echo "Oracle group is $OINSTALL"
+
+# Get location of OEM if it is present
+ORACLE_HOME=`cat $OFOLDER/SIDLIST.txt | grep -v '^#' | grep -v '^-' | grep -v '^+' | grep ":$ORACLE_VER:" | cut -d ':' -f 2 | head -1`
+ORACLE_INV=`cat $ORACLE_HOME/oraInst.loc | grep 'inventory_loc=' | cut -d '=' -f 2`
+OEM_HOME=`cat $ORACLE_INV/ContentsXML/inventory.xml | grep '<HOME NAME="agent' | cut -d '"' -f 4 | head -1`
+if [[ -f "$OEM_HOME/bin/emctl" ]]; then
+  OEM_EMCTL="$OEM_HOME/bin/emctl"
+  echo "OEM agent is present in $OEM_HOME"
+else
+  echo "OEM agent is not present"
+fi
+
+# ASM/RAC-specific globals
+export GRID_HOME=`cat $OFOLDER/SIDLIST.txt | grep '^+ASM' | grep ":$ORACLE_VER:" | cut -d ':' -f 2 | head -1`
+echo "GRID_HOME:     $GRID_HOME"
+GIUSER=`cat $OFOLDER/SIDLIST.txt | grep '^+ASM' | grep ":$ORACLE_VER:" | cut -d ':' -f 4 | head -1`
+echo "Grid user:     $GIUSER"
+# Getting GIPATCHES from fixlet-level include file
+#GIPATCHES=`cat $BASEFOLDER/$PATCHID/$PATCHPSU/bundle.xml | awk 'BEGIN {{RS="<subpatch"; FS="<target_type"} {{print $1}' | awk '{{for(i=1;i<=NF;i++) {{if ($i ~ /^patch_id=/) print $i}}' | awk -F '=' '{{gsub("\"","",$2); print $2}' | grep -v "$PATCHPSU" | xargs`
+echo "Grid patches:  $GIPATCHES"
+# Getting DBPATCHES from fixlet-level include file
+#DBPATCHES=`cat $BASEFOLDER/$PATCHID/$PATCHPSU/bundle.xml | awk 'BEGIN {{RS="<subpatch"; FS="<target_type"} (index($0, "type=\"oracle_database\"") != 0) {{print $1}' | awk '{{for(i=1;i<=NF;i++) {{if ($i ~ /^patch_id=/) print $i}}' | awk -F '=' '{{gsub("\"","",$2); print $2}' | grep -v "$PATCHPSU" | xargs`
+echo "Home patches:  $DBPATCHES"
+GRIDSID=`cat $OFOLDER/SIDLIST.txt | grep '^+ASM' | grep ":$ORACLE_VER:" | cut -d ':' -f 1 | head -1`
+ORASIDS=`cat $OFOLDER/SIDLIST.txt | grep -v '^#' | grep -v '^-' | grep -v '^+' | grep ":$ORACLE_VER:" | cut -d ':' -f 1 | xargs`
+echo "Oracle SIDs:   $ORASIDS"
+# If oracle arch is RAC then we need to work with instances instead of SIDs
+if [[ "$OARCH" == "RAC" ]]; then
+  MYNODE=`hostname | cut -d '.' -f 1`
+  echo "This RAC node: $MYNODE"
+  RACNODES=`ORACLE_HOME=$GRID_HOME; ORACLE_SID=$GRID_SID; $GRID_HOME/bin/olsnodes | grep -v $MYNODE`
+  echo "Other RAC nodes: $RACNODES"
+  instances=""
+  for sid in $ORASIDS; do
+    if [[ "`$GRID_HOME/bin/srvctl status database -d $sid | grep Instance`" == "" ]]; then
+      instances="$instances $sid"
+    fi
+  done
+  ORASIDS=`echo "$instances" | xargs`
+  echo "RAC instances: $ORASIDS"
+fi
+echo
+PERL5LIB=$GRID_HOME/perl/lib:/usr/share/perl5
+
+OLDPATH=$PATH
+
+
+# This should be moved to precheck/patch/rollback to cycle through different oracle homes
+export ORACLE_HOME=`cat $OFOLDER/SIDLIST.txt | grep -v '^#' | grep -v '^-' | grep -v '^+' | grep ":$ORACLE_VER:" | cut -d ':' -f 2 | head -1`
+echo "ORACLE_HOME:   $ORACLE_HOME"
+DBUSER=`cat $OFOLDER/SIDLIST.txt | grep -v '^#' | grep -v '^-' | grep -v '^+' | grep ":$ORACLE_VER:" | cut -d ':' -f 4 | head -1`
+echo "Oracle user:   $DBUSER"
+echo
+export PATH=$ORACLE_HOME/bin:$OLDPATH:/usr/local/bin:$PERL5LIB
+
+
+function checkspace {{
+# parameters: $1 folder to check $2 space required (in bytes) $3 exit code (optional) if not enough space
+  echo "Checking folder: $1"
+  echo "Space required: $2 bytes"
+  echo "df -k $1"
+  space=`df -k $1`
+  echo "$space"
+  if [[ "$ARCH" == "AIX" ]]; then
+    space=`echo "$space" | grep / | awk '{{print $3}' | cut -d '.' -f 1`
+  else
+    space=`echo "$space" | grep / | awk '{{print $4}' | cut -d '.' -f 1`
+  fi
+  space=$(($space * 1024))
+  echo "Space available: $space bytes"
+  if [[ "$space" -ge "$2" ]]; then
+    echo "$1 space $space >= $2"
+  else
+    echo "$1 space $space < $2"
+    if [[ "$3" != "" ]]; then
+      echo "Inadequate space to continue"
+      echo "Exiting with code $3"
+      exit $3
+    fi
+  fi
+}
+
+function backup_spfile {{
+  for SID in $ORASIDS; do
+    export ORACLE_SID=$SID
+    echo "*** Backing up spfile for $ORACLE_SID ***"
+    spdate=`date +'%Y-%m%d-%H%M'`
+    su $DBUSER -c "echo \"
+      spool '$OFOLDER/logs/mom_spool_$ORACLE_SID-$spdate.txt'
+      show parameter spfile
+      create pfile='$OFOLDER/logs/mom_pfile_$ORACLE_SID-$spdate.txt' from spfile;
+      spool off
+    \" | sqlplus '/ as sysdba'"
+  done
+  export ORACLE_SID=""
+}
+
+function get_spfile {{
+  echo "Checking spfile is set on $ORACLE_SID"
+  spfile=`su $DBUSER -c "echo \"
+    set lines 400
+    show parameter spfile
+  \" | sqlplus -S '/ as sysdba'"`
+  echo "$spfile"
+  spfile=`echo "$spfile" | grep spfile | awk '{{print $3}'`
+}
+
+function timecap {{
+# Monitor a backgrounded command until it ends (or until timeout is reached)
+# parameters: $1 timeout in seconds $2 checking interval in seconds
+  # get the PID of the last subshell
+  pid=$!
+  echo "Process: $pid"
+  # timeout is user-specified or 60 seconds if not
+  timeout=${{1:-60}
+  echo "Timeout: $timeout seconds"
+  # check interval is user-specified or 4 seconds if not
+  step=${{2:-4}
+  echo "Checking every $step seconds"
+  counter=0
+  while [[ $pid -ne 0 && counter -le $timeout ]]; do
+    sleep $step
+    let counter+=$step
+    if [[ `ps -p $pid | grep -c $pid` -eq 0 ]]; then
+      pid=0
+    fi
+    echo "$counter seconds passed"
+  done
+  if [[ $pid -ne 0 ]]; then
+    echo "Timeout $timeout reached!"
+    kill $pid
+    echo "Killed process $pid"
+    pid=1
+  else
+    echo "Process finished after $counter seconds!"
+  fi
+  return $pid
+}
+
+function db_start {{
+# use correct db start function for oarch
+# parameters: $1 upgrade (optional, SDB only)
+  if [[ "$OARCH" == "RAC" ]]; then
+    rac_db_start
+  elif [[ "$OARCH" == "ASM" ]]; then
+    asm_db_start
+  else
+    sdb_db_start $1
+  fi
+}
+
+function db_stop {{
+# use correct db stop function for oarch
+# parameters: $1 freeform (optional)
+  if [[ "$OARCH" == "RAC" ]]; then
+    rac_db_stop
+  elif [[ "$OARCH" == "ASM" ]]; then
+    asm_db_stop
+  else
+    sdb_db_stop
+  fi
+}
+
+function sdb_db_start {{
+# Start a database (no timeout because what would we do if it timed out?)
+# $ORACLE_HOME/bin must be in the path; $ORACLE_SID must be set
+# parameters: upgrade (optional)
+  echo "*** Starting database $ORACLE_SID ***"
+  echo "su $DBUSER -c \"echo 'startup $1' | sqlplus '/ as sysdba'\""
+  db=`su $DBUSER -c "echo 'startup $1' | sqlplus '/ as sysdba'"`
+  echo "$db"
+  dbok=`echo "$db" | grep -c "Database opened"`
+}
+
+function sdb_db_stop {{
+# Stop a database (and abort db if it won't stop within allowed time)
+# $ORACLE_HOME/bin must be in the path; $ORACLE_SID must be set
+# parameters: none
+  echo "*** Stopping database $ORACLE_SID ***"
+  echo "su $DBUSER -c \"echo 'shutdown immediate;' | sqlplus '/ as sysdba'\""
+  su $DBUSER -c "echo 'shutdown immediate;' | sqlplus '/ as sysdba'" &
+  timecap 300 5
+  if [[ "$pid" -ne "0" ]]; then
+    echo "su $DBUSER -c \"echo 'shut abort;' | sqlplus '/ as sysdba'\""
+    su $DBUSER -c "echo 'shut abort;' | sqlplus '/ as sysdba'"
+  fi
+  db=`ps -ef | grep -v grep | grep "_pmon_"`
+  echo "$db"
+  dbok=`echo "$db" | grep -c "$ORACLE_SID$"`
+}
+
+function asm_db_start {{
+# success: $dbok = "11"
+  echo "*** Starting ASM database $ORACLE_SID ***"
+  su $DBUSER -c "srvctl start database -d $ORACLE_SID"
+  db=`su $DBUSER -c "srvctl status database -d $ORACLE_SID"`
+  echo "$db"
+  dbok=`echo "$db" | grep -c "is running"`
+  db=`ps -ef | grep -v grep | grep _pmon_`
+  echo "$db"
+  dbok="$dbok`echo $db | grep -c $ORACLE_SID$`"
+}
+
+function asm_db_stop {{
+# success: $dbok = "00"
+  echo "*** Stopping ASM database $ORACLE_SID ***"
+  su $DBUSER -c "srvctl stop database -d $ORACLE_SID"
+  db=`su $DBUSER -c "srvctl status database -d $ORACLE_SID"`
+  echo "$db"
+  dbok=`echo "$db" | grep -c "is running"`
+  db=`ps -ef | grep -v grep | grep _pmon_`
+  echo "$db"
+  dbok="$dbok`echo $db | grep -c $ORACLE_SID$`"
+}
+
+function rac_db_start {{
+# success: $dbok = "11"
+  dbname=`echo $ORACLE_SID | awk '{{print substr($1, 1, length($1)-1)}'`
+  echo "*** Starting RAC instance $ORACLE_SID ***"
+  su $DBUSER -c "srvctl start instance -d $dbname -i $ORACLE_SID"
+  db=`su $DBUSER -c "srvctl status instance -d $dbname -i $ORACLE_SID"`
+  echo "$db"
+  dbok=`echo "$db" | grep -c "is running"`
+  db=`ps -ef | grep -v grep | grep _pmon_`
+  echo "$db"
+  dbok="$dbok`echo $db | grep -c $ORACLE_SID$`"
+}
+
+function rac_db_stop {{
+# success: $dbok = "00"
+  dbname=`echo $ORACLE_SID | awk '{{print substr($1, 1, length($1)-1)}'`
+  echo "*** Stopping RAC instance $ORACLE_SID ***"
+  su $DBUSER -c "srvctl stop instance -d $dbname -i $ORACLE_SID"
+  db=`su $DBUSER -c "srvctl status instance -d $dbname -i $ORACLE_SID"`
+  echo "$db"
+  dbok=`echo "$db" | grep -c "is running"`
+  db=`ps -ef | grep -v grep | grep _pmon_`
+  echo "$db"
+  dbok="$dbok`echo $db | grep -c $ORACLE_SID$`"
+}
+
+function get_invalid {{
+  if [[ "$1" == "objects" ]]; then
+    dbraw=`su $DBUSER -c "echo \"
+      col owner format a30
+      select count(1),owner,object_type,status from dba_objects where status <> 'VALID' and owner in ('SYS','SYSTEM')
+      group by owner,object_type,status
+      order by owner;
+    \" | sqlplus '/ as sysdba'"`
+  elif [[ "$1" == "registry" ]]; then
+    dbraw=`su $DBUSER -c "echo \"
+      select comp_name,comp_id,version,status from dba_registry where status <> 'VALID' and status <> 'OPTION OFF';
+    \" | sqlplus '/ as sysdba'"`
+  else
+    dbraw=""
+  fi
+  echo "$dbraw"
+  invalid=`echo "$dbraw" | grep " rows selected" | cut -d' ' -f 1`
+}
+
+function get_patchlevel {{
+# Extracts patch level from a line of 'opatch lspatches' output
+# parameters: $1 line to extract patchlevel from
+  regex="[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+"
+  if [[ $1 =~ $regex ]]; then
+    patchlevel=`echo "${{BASH_REMATCH[0]}" | cut -d '.' -f 5`
+    patchlevel="20${{patchlevel:0:2}-${{patchlevel:2:2}"
+  else
+    patchlevel=""
+  fi
+}
+
+function get_homelevel {{
+# Gets the patch level of an oracle home
+# parameters: $1 user to run as $2 home to run in
+  binpatches=`su $1 -c "ORACLE_HOME=$2; $2/OPatch/opatch lspatches" | grep ';'`
+  echo "$binpatches"
+  homelevel=""
+  for line in $binpatches; do
+    get_patchlevel $line
+    if [[ "$patchlevel" > "$homelevel" ]]; then
+      homelevel=$patchlevel
+    fi
+  done
+  echo "Patch level of $2 is $homelevel"
+}
+
+function get_raclevel {{
+# Gets the minimum of patchlevels of other RAC nodes using ssh (runs as grid user)
+# parameters: none
+  echo "Looking up RAC node patch levels"
+  raclevel=""
+  for node in $RACNODES; do
+    known="~/.ssh/known_hosts"
+    if [[ "`grep $node $known`" == "" ]]; then
+      echo "Adding $node ssh key to known_hosts for $GIUSER"
+      su $GIUSER -c "ssh-keyscan $node >> $known"
+    fi
+    nodelevel=`su $GIUSER -c "ssh $node 'cat $OFOLDER/PATCHLEVEL-$ORACLE_VER.txt'"`
+    echo "$node patchlevel is $nodelevel"
+    if [[ "$raclevel" == "" || "$raclevel" -gt "$nodelevel" ]]; then
+      raclevel=$nodelevel
+    fi
+  done
+  echo "RAC patchlevel is $raclevel"
+}
+
+function get_psuid {{
+# parameters: none
+  binpatches=`su $DBUSER -c "$ORACLE_HOME/OPatch/opatch lspatches"`
+  echo "$binpatches"
+  psuid=`echo "$binpatches" | grep -iE 'Database Patch Set Update|Database.* Release Update' | cut -d ';' -f 1`
+  echo "PSU patch ID appears to be $psuid"
+}
+
+function get_binpatch {{
+# parameters: $1 patch ID to find $2 user to run as $3 home to run in
+  binpatches=`su $2 -c "ORACLE_HOME=$3; $3/OPatch/opatch lspatches"`
+  echo "$binpatches"
+  binpatch=`echo "$binpatches" | grep -c "$1;"`
+}
+
+function get_dbpatch {{
+# parameters: $1 patch ID to find
+  echo "Checking for 'patch_id = $1'"
+  dbraw=`su $DBUSER -c "echo \"
+    SET LINES 200
+    SET PAGES 500
+    col VERSION for a10
+    col ACTION for a10
+    col DESCRIPTION for a65
+    col ACTION_TIME for a45
+    col STATUS for a8
+    select patch_id, patch_uid, status,ACTION,description,ACTION_TIME
+    from dba_registry_sqlpatch
+    where status = 'SUCCESS' and patch_id = $1
+    order by ACTION_TIME DESC
+    fetch first 1 rows only;
+  \" | sqlplus -S '/ as sysdba'"`
+  echo "$dbraw"
+  dbpatch=`echo "$dbraw" | grep -c "APPLY"`
+}
+
+function get_listener {{
+  # only handles one listener per ORACLE_HOME
+  LISTENER_HOME=`ps -ef | grep -v grep | grep -v awk | grep tnslsnr | awk -F '/bin/tnslsnr' '{{print $1}' | awk '{{print $NF}'`
+  echo "Listeners are running from:"
+  echo "$LISTENER_HOME"
+  LISTENER_HOME=`echo "$LISTENER_HOME" | grep "$ORACLE_HOME" | head -1`
+  if [[ "$LISTENER_HOME" == "$ORACLE_HOME" ]]; then
+    LISTENER=`ps -ef | grep -v grep | grep -v awk | grep tnslsnr | grep $ORACLE_HOME | awk -F '/bin/tnslsnr' '{{print $2}' | awk '{{print $1}' | head -1`
+    echo "*** Listener name is $LISTENER ***"
+  else
+    echo "*** Listener will not be stopped/started during patch session ***"
+  fi
+}
+
+function show_oem_agent {{
+  oem=`su $DBUSER -c "$OEM_EMCTL status agent"`
+  echo "$oem"
+  oem=`echo "$oem" | grep -c "Agent is Running and Ready"`
+}
+
+function do_oem_agent {{
+  # parameters: start | stop
+  show_oem_agent
+  echo "OEM agent $1"
+  su $DBUSER -c "$OEM_EMCTL $1 agent"
+  sleep 2
+  show_oem_agent
+}
+
+function asm_sids_online {{
+  echo "Checking all ASM SIDs are online"
+  online=`su $GIUSER -c "ORACLE_HOME=$GRID_HOME; $GRID_HOME/bin/crsctl stat res -t -w 'TYPE = ora.database.type'"`
+  echo "$online"
+  online=`echo "$online"  | grep -i $(hostname | cut -d'.' -f 1) | grep 'ONLINE  ONLINE' | grep -i open`
+  echo "SIDs: $ORASIDS"
+  echo "$online"
+  numonline=`echo "$online" | wc -l`
+  numsids=`echo $ORASIDS | wc -w`
+}
+
+function upgrade_opatch {{
+# $1 user to run as, $2 oracle home to check
+  echo "Checking OPatch version against $OPATCHVER"
+  targetopver=`echo $OPATCHVER | awk -F. '{{printf("%02d%02d%02d%02d%02d", $1,$2,$3,$4,$5)}'`
+  opver=`su $1 -c "ORACLE_HOME=$2; $2/OPatch/opatch version" | grep "OPatch Version: " | awk '{{print $3}'`
+  echo "Current OPatch version is $opver"
+  currentopver=`echo "$opver" |  awk -F. '{{printf("%02d%02d%02d%02d%02d", $1,$2,$3,$4,$5)}'`
+  echo "Checking $currentopver >= $targetopver"
+  if [[ "$currentopver" -lt "$targetopver" ]]; then
+    echo "Upgrading OPatch using $BASEFOLDER/$OPATCHFILE"
+    ostamp=`date +'%Y-%m-%d'`
+    mv -f $2/OPatch $2/OPatch_$ostamp
+    unzip -o -d $2 $BASEFOLDER/$OPATCHFILE
+    chown -R $1:$OINSTALL $2/OPatch $2/OPatch
+    chmod -R 755 $2/OPatch $2/OPatch
+    opver=`su $1 -c "ORACLE_HOME=$2; $2/OPatch/opatch version" | grep "OPatch Version: " | awk '{{print $3}'`
+    echo "Current OPatch version is $opver"
+    currentopver=`echo "$opver" |  awk -F. '{{printf("%02d%02d%02d%02d%02d", $1,$2,$3,$4,$5)}'`
+  fi
+  echo "Checking $currentopver >= $targetopver"
+}
+
+function get_conflicts {{
+# parameters: $1 user to run opatch as, $2 conflict check mode, $3 patch home, $4 file to save conflicts in (opt)
+  if [[ "$1" == "$DBUSER" ]]; then
+    chome="$ORACLE_HOME"
+  else
+    chome="ORACLE_HOME=$GRID_HOME; $GRID_HOME"
+  fi
+  conflicts=`su $1 -c "$chome/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -$2 $3"`
+  echo "$conflicts"
+  conflicts=`echo "$conflicts" | grep "Conflict with "`
+  if [[ "$conflicts" != "" ]]; then
+    echo "Conflicts identified:"
+    echo "$conflicts"
+    conflicts=`echo "$conflicts" | awk '{{print $3}' | sort -u | xargs`
+    echo "Conflicting patch IDs: $conflicts"
+    if [[ "$4" != "" ]]; then
+      echo $conflicts > $4
+    fi
+  else
+    echo "No actionable conflicts identified."
+  fi
+  if [[ "$ALLOW_CONFLICTS" == "1" && "$conflicts" != "" ]]; then
+    echo "ORACLE_ALLOW_CONFLICTS is set; ignoring conflicts."
+    conflicts=""
+  fi
+}
+
+function get_pspace {{
+# parameters: $1 user to run opatch as, $2 patch home
+  pspacecheck=`$ORACLE_HOME/OPatch/opatch prereq CheckSystemSpace -ph $1`
+  echo "$pspacecheck"
+  pspace=`echo "$pspacecheck" | grep -i 'Prereq "checkSystemSpace" passed'`
+}
+
+function get_analyze_auto {{
+# parameters: none
+  echo "Running 'opatchauto apply -analyze' for grid PSU patch $PATCHPSU"
+  export ORACLE_SID=$GRIDSID
+  analyze=`ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatchauto apply -analyze $BASEFOLDER/$PATCHID/$PATCHPSU`
+  echo "--"
+  echo "$analyze"
+  echo "--"
+  #analyze=`echo "$analyze" | grep -i "failed"`
+  analyze=`echo "$analyze" | grep -i "Reason: Failed during Analysis:"`
+  echo "Results:"
+  echo "$analyze"
+  if [[ "$analyze" == "" ]]; then
+    echo "Analysis passed!"
+  elif [[ "$ALLOW_CONFLICTS" == "1" ]]; then
+    echo "ORACLE_ALLOW_CONFLICTS is set to 1; ignoring conflicts."
+    analyze=`echo "$analyze" | grep -v "CheckConflictAgainst"`
+  fi
+}
+
+function notify {{
+# parameters: $1 text (optional)
+  if [[ "$BADSIDS" -eq "0" ]]; then
+    BADSIDS=1
+  fi
+  host=`hostname`
+  message="$operation failed for Oracle $ORACLE_ARCH $ORACLE_VER on $host (exit code $BADSIDS)
+  $1"
+  subject="Attention - Critical!!! BigFix $ORACLE_ARCH $ORACLE_VER $operation Failed on $host!!!"
+  admins=""
+  for mailto in $admins; do
+    echo "Notifying $mailto: $subject"
+    echo "$message" | mailx -s "$subject" $mailto
+  done
+}
+
+function hard_exit {{
+# parameters: none
+  stamp "Aborting session"
+  if [[ "$BADSIDS" -eq "0" ]]; then
+    BADSIDS=1
+  fi
+  exit $BADSIDS
+}
+
+function failopen {{
+# parameters: none
+  stamp "Aborting session; leaving databases and listener up..."
+  dbok=1
+  if [[ "$OARCH" != "SDB" ]]; then
+    if [[ "`ps -ef | grep -v grep | grep -c asm_pmon_`" -eq "0" ]]; then
+      echo "*** Starting grid instance +ASM ***"
+      su $GIUSER -c "echo 'startup' | sqlplus '/ as sysdba'"
+    fi
+    if [[ "`ps -ef | grep -v grep | grep -c asm_pmon_`" -eq "0" ]]; then
+      dbok=0
+      echo "Grid instance is not up!"
+    fi
+  fi
+  listen=`ps -ef | grep -v grep | grep -c "tnslsnr $LISTENER"`
+  if [[ "$listen" -eq "0" && "$LISTENER_HOME" == "$ORACLE_HOME" ]]; then
+    echo "*** Starting listener $LISTENER ***"
+    su $DBUSER -c "lsnrctl start $LISTENER"
+    listen=`ps -ef | grep -v grep | grep $ORACLE_HOME | grep -c "tnslsnr $LISTENER"`
+  fi
+  if [[ "$listen" -eq "0" ]]; then
+    dbok=0
+    echo "Listener is not up!"
+  fi
+  if [[ "$dbok" -ne "0" ]]; then
+    for SID in $ORASIDS; do
+      export ORACLE_SID=$SID
+      db_start
+    done
+    ps -ef | grep -v grep | grep _pmon_
+  fi
+  stamp "END patch session (aborted, fail-open)"
+  notify
+  hard_exit
+}
+
+function checkdone {{
+# parameters: none
+  if [[ "$BADSIDS" -gt "0" ]]; then
+    #failopen
+    hard_exit
+  fi
+}
+
+function checksids {{
+# parameters: $1 result from sid
+  if [[ "$1" -gt "0" ]]; then
+    BADSIDS=`expr $BADSIDS + 1`
+  fi
+  return $1
+}
+
+function check {{
+# parameters: $1 check name, $2 check value, $3 test result (0=pass), $4 error# if fail, $5 exit (fail-open) or hard (no fail-open) or wait (don't fail, just update $BADSIDS)
+  if [[ "$ORACLE_SID" == "" ]]; then
+    label="$ORACLE_VER"
+  else
+    label="$ORACLE_VER/$ORACLE_SID"
+  fi
+  if [[ "$3" -eq "0" ]]; then
+    status="PASS"
+  else
+    status="FAIL"
+    if [[ "$5" == "exit" || "$5" == "hard" ]]; then
+      ERROR=$4
+    elif [[ "$ERROR" -lt "$4" ]]; then
+      ERROR=`expr $ERROR + $4`
+    fi
+  fi
+  echo "-----"
+  echo "CHECK : $1 : $label : $2 [$status]"
+  stamp "(ERROR=$ERROR)"
+  echo "-----"
+  echo
+  if [[ "$ERROR" -gt "0" && "$5" == "exit" ]]; then
+    failopen
+  elif [[ "$ERROR" -gt "0" && "$5" == "hard" ]]; then
+    hard_exit
+  else
+    return $3
+  fi
+}
+
+_EOF_
+delete "{parameter "ODIR"}/INCLUDE.sh"
+move __createfile "{parameter "ODIR"}/INCLUDE.sh"
+
+
+// This is the HOTFIX script
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+
+export operation=Hotfix
+stamp "BEGIN HOTFIX session"
+echo "Available hotfixes: $HOTFIXES"
+
+# Perform SID-specific checks for each SID in this Oracle home
+echo "SIDS: $ORASIDS"
+for SID in $ORASIDS; do
+  export ORACLE_SID=$SID
+
+  echo "Checking that database $ORACLE_SID is up"
+  dbup=`ps -ef | grep -v grep | grep -c "ora_pmon_$ORACLE_SID"`
+  check "DATABASE UP" "$dbup" `[[ "$dbup" -gt "0" ]]; echo $?` 1
+  checksids $?
+  if [[ "$dbup" -eq "0" ]]; then
+    continue
+  fi
+
+  if [[ "$SKIP_PRECHECK" == "1" ]]; then
+    echo "ORACLE_SKIP_PRECHECK is set to 1; skipping hotfix prechecks"
+  else
+    echo "Checking for invalid dba_objects rows in $ORACLE_SID"
+    get_invalid objects
+    if [[ "$ALLOW_INVALIDS" != "1" ]]; then
+      check "INVALID OBJECTS" "$invalid" `[[ "$invalid" == "no" ]]; echo $?` 1
+    fi
+
+    echo "Checking for invalid dba_registry rows in $ORACLE_SID"
+    get_invalid registry
+    if [[ "$ALLOW_INVALIDS" != "1" ]]; then
+      check "INVALID REGISTRY" "$invalid" `[[ "$invalid" == "no" ]]; echo $?` 1
+    fi
+  fi
+
+done
+export ORACLE_SID=""
+
+if [[ "$ERROR" -gt "0" ]]; then
+  stamp "END HOTFIX session (failed precheck)"
+  hard_exit
+fi
+
+if [[ "$OEM_EMCTL" != "" ]]; then
+  do_oem_agent stop
+  check "OEM AGENT STOP" "$oem" `[[ "$oem" -eq "0" ]]; echo $?` 1 hard
+fi
+
+get_listener
+#do_listeners STOP
+#check "LISTENER STOP" "$LISTENCOUNT" `[[ "$LISTENCOUNT" -eq "0" ]]; echo $?` 1 hard
+
+echo "DB STOP before HOTFIX patching"
+for SID in $ORASIDS; do
+  export ORACLE_SID=$SID
+  db_stop
+  check "DB STOP BEFORE HOTFIX BINARY" "$dbok" `[[ "$dbok" -eq "0" ]]; echo $?` 1
+  checksids $?
+done
+checkdone
+export ORACLE_SID=""
+
+echo "*** Hotfix binary patching ***"
+echo "Hotfixes available: $HOTFIXES"
+echo "Building list of needed hotfixes"
+NEEDED=""
+for HOTFIX in $HOTFIXES; do
+  if [[ "`cat $OFOLDER/CONFLICTS-$ORACLE_VER.txt | grep -c $HOTFIX`" -eq "0" ]]; then
+    echo "Hotfix $HOTFIX not in conflict list for $ORACLE_HOME"
+  elif [[ "`cat $OFOLDER/PATCHLIST-$ORACLE_VER.txt | grep -c $HOTFIX`" -gt "0" ]]; then
+    echo "Hotfix $HOTFIX is already in patch list for $ORACLE_HOME"
+  else
+    echo "Hotfix $HOTFIX needs to be applied to $ORACLE_HOME"
+    NEEDED="$NEEDED $HOTFIX"
+  fi
+done
+NEEDED=`echo "$NEEDED" | xargs`
+if [[ "$NEEDED" == "" ]]; then
+  echo "No hotfixes needed!"
+else
+  echo "Hotfixes needed: $NEEDED"
+  echo
+  echo "Applying Hotfix binary patches for $NEEDED"
+  ids=`echo "$NEEDED" | tr ' ' ','`
+  echo "su $DBUSER -c \"$ORACLE_HOME/OPatch/opatch napply $BASEFOLDER -id $ids -force -silent\""
+  su $DBUSER -c "$ORACLE_HOME/OPatch/opatch napply $BASEFOLDER -id $ids -force -silent"
+  for HOTFIX in $NEEDED; do
+    get_binpatch $HOTFIX $DBUSER $ORACLE_HOME
+    check "HOTFIX BINARY PATCH INSTALLED" "$HOTFIX=$binpatch" `[[ "$binpatch" -eq "1" ]]; echo $?`
+  done
+fi
+
+for SID in $ORASIDS; do
+  export ORACLE_SID=$SID
+  if [[ "`ps -ef | grep -v grep | grep -c ora_pmon_$ORACLE_SID`" -eq "0" ]]; then
+    db_start
+    check "DB START AFTER HOTFIX BINARY" "$dbok" `[[ "$dbok" -gt "0" ]]; echo $?` 1
+    if [[ "$dbok" -eq "0" ]]; then
+      continue
+    fi
+  fi
+done
+
+echo "*** Hotfix datapatching ***"
+nodespending=0
+if [[ "$OARCH" == "RAC" ]]; then
+  echo "Checking for binary completion of hotfixes on $RACNODES"
+  for node in $RACNODES; do
+    known="~/.ssh/known_hosts"
+    if [[ "`grep $node $known`" == "" ]]; then
+      echo "Adding $node ssh key to $known"
+      su $GIUSER -c "ssh-keyscan $node >> $known"
+    fi
+    nodeconflicts=`su $GIUSER -c "ssh $node 'cat $OFOLDER/CONFLICTS-$ORACLE_VER.txt'"`
+    nodepatchlist=`su $GIUSER -c "ssh $node 'cat $OFOLDER/PATCHLIST-$ORACLE_VER.txt'"`
+    nodeneeds=""
+    for HOTFIX in $HOTFIXES; do
+      rhneed=`echo "$nodeconflicts" | grep -c "$HOTFIX"`
+      rhdone=`echo "$nodepatchlist" | grep -c "$HOTFIX"`
+      if [[ "$rhneed" -gt "0" && "$rhdone" -eq "0" ]]; then
+        nodeneeds="$nodeneeds $HOTFIX"
+      fi
+    done
+    if [[ "$nodeneeds" == "" ]]; then
+      echo "$node has installed all needed hotfix binaries"
+    else
+      echo "$node still needs hotfixes:$nodeneeds"
+      nodespending=`expr $nodespending + 1`
+    fi
+  done
+  echo "$nodespending nodes still need to install hotfix binaries"
+fi
+
+if [[ "$nodespending" -gt "0" ]]; then
+  echo "Datapatch skipped ($nodespending nodes not ready)"
+else
+  for SID in $ORASIDS; do
+    export ORACLE_SID=$SID
+    echo "Hotfix datapatching $ORACLE_SID"
+    dp=`su $DBUSER -c "$ORACLE_HOME/OPatch/datapatch -verbose"`
+    echo "$dp"
+    DP_ATTEMPTED=`echo "$dp" | sed -n '/The following.* patches will be applied:/,/Installing patches.../p' | awk '{{print $1}' | grep '[0-9]' | xargs`
+    echo "Verifying datapatch for: $DP_ATTEMPTED"
+    for HOTFIX in $DP_ATTEMPTED; do
+      get_dbpatch $HOTFIX $DBUSER $ORACLE_HOME
+      check "HOTFIX DATAPATCH" "$HOTFIX=$dbpatch" `[[ "$dbpatch" -eq "1" ]]; echo $?` 1
+      checksids $?
+    done
+  done
+fi
+checkdone
+export ORACLE_SID=""
+
+if [[ "$LISTENERS" != "" ]]; then
+  do_listeners START
+  check "LISTENER START" "$LISTENCOUNT" `[[ "$LISTENCOUNT" -gt "0" ]]; echo $?` 1 hard
+fi
+
+if [[ "$OEM_EMCTL" != "" ]]; then
+  do_oem_agent start
+  check "OEM AGENT START" "$oem" `[[ "$oem" -gt "0" ]]; echo $?` 1 hard
+fi
+
+$OFOLDER/POSTCHECK.sh
+ERROR=$?
+if [[ "$ERROR" -gt "0" ]]; then
+  stamp "END HOTFIX session (failed postcheck)"
+  hard_exit
+fi
+
+for HOTFIX in $HOTFIXES; do
+  echo "Removing $BASEFOLDER/$HOTFIX"
+  rm -rf $BASEFOLDER/$HOTFIX
+done
+echo "Hotfix patching completed successfully."
+stamp "END HOTFIX session"
+_EOF_
+delete "{parameter "ODIR"}/HOTFIX.sh"
+move __createfile "{parameter "ODIR"}/HOTFIX.sh"
+
+
+// This is the PRECHECK script
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+
+stamp "BEGIN PRECHECK for ASM $ORACLE_VER"
+
+echo "*** Beginning prechecks for $ORACLE_VER ***"
+
+echo "Checking for perl (needed to apply patches)"
+pearl=`which perl`
+check "PERL IN PATH" $pearl `[[ "$pearl" != "" ]]; echo $?` 8
+
+echo "Checking for at least one listener (any version)"
+listen=`ps -ef | grep -v grep | grep -c tnslsnr`
+check "LISTENER UP" $listen `[[ "$listen" -gt "0" ]]; echo $?` 1024 wait
+
+  # if an Oracle Enterprise Management agent is found, show whether it's up
+  if [[ "$OEM_EMCTL" == "" ]]; then
+    echo "OEM installation not found"
+    echo
+  else
+    echo "OEM found: $OEM_EMCTL"
+    echo "Checking for running OS Watcher"
+    oem=`ps -ef | grep -v grep | grep OSW`
+    echo "$oem"
+    oem=`echo "$oem" | grep -c OSW`
+    if [[ "$oem" -eq "0" ]]; then
+      echo "OEM OS Watcher is not running"
+    else
+      echo "OEM OS Watcher is running"
+    fi
+    #check "OEM OS WATCHER UP" $oem `[[ "$oem" -gt "0" ]]; echo $?` 1024
+    echo "Checking for running OEM Agent"
+    oem=`ps -ef | grep -v grep | grep agent`
+    echo "$oem"
+    oem=`echo "$oem" | grep -c agent`
+    if [[ "$oem" -eq "0" ]]; then
+      echo "OEM agent is not running"
+    else
+      echo "OEM agent is running"
+    fi
+    show_oem_agent
+    #check "OEM AGENT UP" $oem `[[ "$oem" -gt "0" ]]; echo $?` 1024
+  fi
+
+
+spacewanted=$(($MINGB * 1024 * 1024 * 1024))
+checkspace $ORACLE_HOME $spacewanted
+check "SPACE $ORACLE_HOME" "$space" `[[ "$space" -ge "$spacewanted" ]]; echo $?` 16
+
+if [[ "$OARCH" != "SDB" ]]; then
+  asm_sids_online
+  check "ALL SIDS ARE ONLINE PRE-PATCH" "$numsids SIDs, $numonline online" `[[ "$numonline" -ge "$numsids" ]]; echo $?` 512
+fi
+
+for SID in $ORASIDS; do
+  export ORACLE_SID=$SID
+  OLDERROR=$ERROR
+
+  get_spfile
+  #check "SPFILE IS SET" $spfile `[[ "$spfile" != "" ]]; echo $?` 1025
+  checksids $?
+
+  echo "Checking that database $ORACLE_SID is up"
+  dbup=`ps -ef | grep -v grep | grep "_pmon_"`
+  echo "$dbup"
+  dbup=`echo "$dbup" | grep -c "$ORACLE_SID$"`
+  echo $dbup
+  # If database is online then it is up; checking pmon is redundant
+  #check "DATABASE UP" "$dbup" `[[ "$dbup" -gt "0" ]]; echo $?` 1
+  #checksids $?
+  #if [[ "$?" -gt "0" ]]; then
+  #  continue
+  #fi
+
+  spfilebak="$ORACLE_HOME/dbs/init${{ORACLE_SID}_before_patching.ora"
+  echo "Backing up database $ORACLE_SID spfile to $spfilebak"
+  rm -f $spfilebak
+  su $DBUSER -c "echo 'show parameter spfile;' | sqlplus '/ as sysdba'"
+  echo "create pfile='$spfilebak' from spfile;"
+  su $DBUSER -c "echo \"create pfile='$spfilebak' from spfile;\" | sqlplus '/ as sysdba'"
+  ls -l $spfilebak
+  echo
+
+  ctrlfilebak="$ORACLE_HOME/dbs/control_${{ORACLE_SID}_before_patching.ctl"
+  echo "Backing up database $ORACLE_SID control file to $ctrlfilebak"
+  rm -f $ctrlfilebak
+  su $DBUSER -c "echo 'select name from v\$controlfile;' | sqlplus '/ as sysdba'"
+  echo "alter database backup controlfile to '$ctrlfilebak';"
+  su $DBUSER -c "echo \"alter database backup controlfile to '$ctrlfilebak';\" | sqlplus '/ as sysdba'"
+  ls -l $ctrlfilebak
+  echo
+
+  echo "Checking for invalid dba_objects rows in $ORACLE_SID"
+  get_invalid objects
+  if [[ "$invalid" != "no" ]]; then
+    echo "Rebuilding invalid objects"
+    su $DBUSER -c "cd $ORACLE_HOME/rdbms/admin && sqlplus '/ as sysdba' @utlrp.sql"
+    get_invalid objects
+  fi
+  if [[ "$ALLOW_INVALIDS" != "1" ]]; then
+    check "INVALID OBJECTS" "$invalid" `[[ "$invalid" == "no" ]]; echo $?` 1
+  fi
+
+  echo "Checking for invalid dba_registry rows in $ORACLE_SID"
+  get_invalid registry
+  if [[ "$ALLOW_INVALIDS" != "1" ]]; then
+    check "INVALID REGISTRY" "$invalid" `[[ "$invalid" == "no" ]]; echo $?` 1
+  fi
+
+  echo "Checking installed database patches"
+  get_dbpatch $PATCHPSU
+  dbpatch1=$dbpatch
+  get_dbpatch $PATCHJVM
+  dbpatch2=$dbpatch
+  if [[ "$dbpatch1" -eq "0" ]]; then
+    echo "PSU database patch $PATCHPSU is needed"
+  else
+    echo "PSU database patch $PATCHPSU is NOT needed"
+  fi
+  if [[ "$dbpatch2" -eq "0" ]]; then
+    echo "JVM database patch $PATCHJVM is needed"
+  else
+    echo "JVM database patch $PATCHJVM is NOT needed"
+  fi
+  check "DATABASE PATCH NEEDED" "$PATCHPSU=$dbpatch1, $PATCHJVM=$dbpatch2" `[[ "$dbpatch1" -eq "0" || "$dbpatch2" -eq "0" ]]; echo $?` 8
+
+  checksids `expr $ERROR - $OLDERROR`
+done
+export ORACLE_SID=""
+
+echo "Checking installed binary patches"
+get_binpatch $PATCHPSU $DBUSER $ORACLE_HOME
+binpatch1=$binpatch
+get_binpatch $PATCHJVM $DBUSER $ORACLE_HOME
+binpatch2=$binpatch
+if [[ "$binpatch1" -eq "0" ]]; then
+  echo "PSU binary patch $PATCHPSU is needed"
+else
+  echo "PSU binary patch $PATCHPSU is NOT needed"
+fi
+if [[ "$binpatch2" -eq "0" ]]; then
+  echo "JVM binary patch $PATCHJVM is needed"
+else
+  echo "JVM binary patch $PATCHJVM is NOT needed"
+fi
+check "BINARY PATCH NEEDED" "$PATCHPSU=$binpatch1, $PATCHJVM=$binpatch2" `[[ "$binpatch1" -eq "0" || "$binpatch2" -eq "0" ]]; echo $?` 32
+
+if [[ "$OARCH" != "SDB" ]]; then
+  echo "Checking installed grid patches"
+  get_binpatch $PATCHPSU $GIUSER $GRID_HOME
+ binpatch1=$binpatch
+  get_binpatch $PATCHJVM $GIUSER $GRID_HOME
+  binpatch2=$binpatch
+  if [[ "$binpatch1" -eq "0" ]]; then
+    echo "PSU grid patch $PATCHPSU is needed"
+  else
+    echo "PSU grid patch $PATCHPSU is NOT needed"
+  fi
+  if [[ "$binpatch2" -eq "0" ]]; then
+    echo "JVM grid patch $PATCHJVM is needed"
+  else
+    echo "JVM grid patch $PATCHJVM is NOT needed"
+  fi
+  check "GRID PATCH NEEDED" "$PATCHPSU=$binpatch1, $PATCHJVM=$binpatch2" `[[ "$binpatch1" -eq "0" || "$binpatch2" -eq "0" ]]; echo $?` 32
+fi
+
+if [[ "$OARCH" != "SDB" ]]; then
+  upgrade_opatch $GIUSER $GRID_HOME
+  check "GRID OPATCH VERSION" "$opver" `[[ "$currentopver" -ge "$targetopver" ]]; echo $?` 64
+fi
+upgrade_opatch $DBUSER $ORACLE_HOME
+check "ORACLE OPATCH VERSION" "$opver" `[[ "$currentopver" -ge "$targetopver" ]]; echo $?` 64
+
+deleteopver=`echo "12.2.0.1.37" |  awk -F. '{{printf("%02d%02d%02d%02d%02d", $1,$2,$3,$4,$5)}'`
+if [[ "$currentopver" -ge "$deleteopver" ]]; then
+  echo "=============================================================================================="
+  echo "Currently installed OPatch version $opver supports removing inactive patches!"
+  echo "=============================================================================================="
+  echo "su $DBUSER -c \"$ORACLE_HOME/OPatch/opatch util listorderedinactivepatches\""
+  su $DBUSER -c "$ORACLE_HOME/OPatch/opatch util listorderedinactivepatches"
+  echo ""
+  echo "su $GIUSER -c \"ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatch util listorderedinactivepatches\""
+  su $GIUSER -c "ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatch util listorderedinactivepatches"
+  echo "###############################################################################################"
+  echo "Deleting inactive patches!"
+  echo "###############################################################################################"
+  echo "$ORACLE_HOME/OPatch/opatch util deleteinactivepatches -silent"
+  su $DBUSER -c "$ORACLE_HOME/OPatch/opatch util deleteinactivepatches -silent"
+  echo ""
+  echo "ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatch util deleteinactivepatches -silent"
+  su $GIUSER -c "ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatch util deleteinactivepatches -silent"
+  echo "=============================================================================================="
+  echo ""
+fi
+
+echo "Checking for JVM patch conflicts"
+get_conflicts $DBUSER ph "$BASEFOLDER/$PATCHID/$PATCHJVM"
+check "JVM PATCH CONFLICTS" "$conflicts" `[[ "$conflicts" == "" ]]; echo $?` 256
+
+rm -f $OFOLDER/CONFLICTS_*.txt
+if [[ "$OARCH" != "SDB" && "$ORACLE_VER" > "12.1.0.2" ]]; then
+  echo "Checking for PSU patch conflicts"
+  for pid in $DBPATCHES; do
+    get_conflicts $DBUSER phBaseDir "$BASEFOLDER/$PATCHID/$PATCHPSU/$pid" "$OFOLDER/CONFLICTS_$pid.txt"
+    check "PSU PATCH $pid CONFLICTS" "$conflicts" `[[ "$conflicts" == "" ]]; echo $?` 128
+  done
+  cat $OFOLDER/CONFLICTS_*.txt | tr ' ' '\n' | sort -u | xargs > $OFOLDER/CONFLICTS-$ORACLE_VER.txt
+  rm -f $OFOLDER/CONFLICTS_*.txt
+
+  echo "Checking for grid PSU patch conflicts"
+  for pid in $GIPATCHES; do
+    get_conflicts $GIUSER phBaseDir "$BASEFOLDER/$PATCHID/$PATCHPSU/$pid" "$OFOLDER/CONFLICTS_$pid.txt"
+    check "PSU GRID PATCH $pid CONFLICTS" "$conflicts" `[[ "$conflicts" == "" ]]; echo $?` 128
+  done
+  cat $OFOLDER/CONFLICTS_*.txt | tr ' ' '\n' | sort -u | xargs > $OFOLDER/CONFLICTS+ASM-$ORACLE_VER.txt
+  rm -f $OFOLDER/CONFLICTS_*.txt
+
+  echo "Checking for grid patch space"
+  for pid in $GIPATCHES; do
+    pspace=`su $GIUSER -c "ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatch prereq CheckSystemSpace -phBaseDir $BASEFOLDER/$PATCHID/$PATCHPSU/$pid"`
+    echo "$pspace"
+    pspace=`echo "$pspace" | grep -i 'Prereq "checkSystemSpace" passed'`
+    check "GRID PSU PATCH $pid SPACE" "$pspace" `[[ "$pspace" != "" ]]; echo $?` 2048
+  done
+
+  echo "Checking for database patch space"
+  for pid in $DBPATCHES; do
+    pspace=`su $DBUSER -c "$ORACLE_HOME/OPatch/opatch prereq CheckSystemSpace -phBaseDir $BASEFOLDER/$PATCHID/$PATCHPSU/$pid"`
+    echo "$pspace"
+    pspace=`echo "$pspace" | grep -i 'Prereq "checkSystemSpace" passed'`
+    check "ORACLE PSU PATCH $pid SPACE" "$pspace" `[[ "$pspace" != "" ]]; echo $?` 2048
+  done
+fi
+
+get_analyze_auto
+check "GRID PSU PATCH ANALYZE" "$analyze" `[[ "$analyze" == "" ]]; echo $?` 128
+
+stamp "END PRECHECK for ASM $ORACLE_VER"
+
+if [[ "$ERROR" -gt "0" || "$BADSIDS" -gt "0" ]]; then
+  echo "!!! One or more prechecks failed for $ORACLE_VER!"
+  #exit $ERROR
+  if [[ "$BADSIDS" -eq "0" ]]; then
+    BADSIDS=1
+  fi
+  exit $BADSIDS
+else
+  echo "All prechecks passed for $ORACLE_VER."
+  echo
+fi
+_EOF_
+delete "{parameter "ODIR"}/PRECHECK.sh"
+move __createfile "{parameter "ODIR"}/PRECHECK.sh"
+
+
+// This is the ASM (non-RAC) PATCH script
+createfile until _EOF_
+. {parameter "ODIR"}/PATCHASMRAC.sh
+_EOF_
+delete "{parameter "ODIR"}/PATCHASM.sh"
+move __createfile "{parameter "ODIR"}/PATCHASM.sh"
+
+
+// This is the RAC PATCH script
+createfile until _EOF_
+. {parameter "ODIR"}/PATCHASMRAC.sh
+_EOF_
+delete "{parameter "ODIR"}/PATCHRAC.sh"
+move __createfile "{parameter "ODIR"}/PATCHRAC.sh"
+
+
+// This is the PATCH script for ASM/RAC
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+export operation="PATCH"
+stamp "BEGIN patch session"
+echo ""
+stamp "*** patch session prep ***"
+
+if [[ "$SKIP_PRECHECK" == "1" ]]; then
+  echo "ORACLE_SKIP_PRECHECK is set to 1; skipping prechecks."
+else
+  $OFOLDER/PRECHECK.sh
+  BADSIDS=$?
+  if [[ "$BADSIDS" -gt "0" ]]; then
+    stamp "END patch session (failed precheck)"
+    hard_exit "(Failed precheck before patching)"
+  fi
+fi
+
+backup_spfile
+
+if [[ "$OEM_EMCTL" != "" ]]; then
+  do_oem_agent stop
+  check "OEM AGENT STOP" "$oem" `[[ "$oem" -eq "0" ]]; echo $?` 9020 hard
+fi
+
+get_listener
+#if [[ "$LISTENER_HOME" == "$ORACLE_HOME" ]]; then
+#  echo "Stopping listener"
+#  lsnrctl stop $LISTENER
+#  sleep 2
+#  listen=`ps -ef | grep -v grep | grep $ORACLE_HOME | grep -c "tnslsnr $LISTENER"`
+#  check "LISTENER STOP" "$listen" `[[ "$listen" -eq "0" ]]; echo $?` 9020 hard
+#fi
+
+# Crazy workaround for crazy bug in 19c on db-patching RAC node
+if [[ "$OARCH" == "RAC" && "$ORACLE_VER" == "19."* ]]; then
+  oldlevel=`cat $OFOLDER/PATCHLEVEL-$ORACLE_VER.txt | xargs`
+  get_raclevel
+  ouidir="`cat /etc/oraInst.loc | grep -i 'inventory_loc' | cut -d '=' -f 2`/ContentsXML"
+  ouifile=oui-patch.xml
+  ouibak=`date +'%Y%m%d-%H%M%S'`
+  ouitest=`ls -l $ouidir | grep $ouifile | grep "$GIUSER $OINSTALL"`
+  if [[ "$raclevel" > "$oldlevel" && "$ouitest" == "" ]]; then
+    echo "Bad $ouidir/$ouifile"
+    ouibak=$ouifile.$ouibak
+    echo "Backing up $ouifile to $ouifile.$ouibak"
+    mv -f $ouidir/$ouifile $ouidir/$ouifile.$ouibak
+    #mynode=`hostname | cut -d '.' -f 1`
+    #othernode=`srvctl status asm -verbose | grep -v $mynode | cut -d ':' -f 1 | rev | cut -d ' ' -f 1 | rev`
+    othernode=`echo $RACNODES | cut -d ' ' -f 1`
+    echo "Copying $ouifile from $othernode"
+    scp $othernode:$ouidir/$ouifile $ouidir/$ouifile
+    chown $GIUSER:$OINSTALL $ouidir/$ouifile
+    chmod 660 $ouidir/$ouifile
+    ls -l $ouidir/$ouifile
+  fi
+fi
+
+echo "ORACLE_BACKUP is set to '$ORACLE_BACKUP'"
+if [[ "$ORACLE_BACKUP" != "" && -d "$ORACLE_BACKUP" ]]; then
+  orabak=$ORACLE_BACKUP/`hostname`_$ORACLE_VER_`date +"%Y-%m-%d"`.tar
+  echo "*** Backing up $ORACLE_HOME to $orabak"
+  tar cvpf $orabak $ORACLE_HOME
+  ls -l $orabak
+else
+  echo "ORACLE_BACKUP does not point to a directory; skipping ORACLE_HOME backup"
+fi
+
+stamp "*** OJVM patching ***"
+
+get_binpatch $PATCHJVM $DBUSER $ORACLE_HOME
+if [[ "$binpatch" -eq "0" ]]; then
+  if [[ "$SKIP_PRECHECK" == "1" ]]; then
+    echo "*** Re-checking for JVM patch conflicts ***"
+    get_conflicts $DBUSER ph "$BASEFOLDER/$PATCHID/$PATCHJVM"
+    check "JVM PATCH CONFLICTS" "$conflicts" `[[ "$conflicts" == "" ]]; echo $?` 9041 exit
+  fi
+
+  for SID in $ORASIDS; do
+    export ORACLE_SID=$SID
+    db_stop
+    check "DB STOP BEFORE JVM BINARY" "$dbok" `[[ "$dbok" -eq "0" ]]; echo $?` 9042 wait
+    checksids $?
+  done
+  checkdone
+  export ORACLE_SID=""
+
+  echo "*** Applying JVM binary patch ***"
+  su $DBUSER -c "$ORACLE_HOME/OPatch/opatch apply -silent $BASEFOLDER/$PATCHID/$PATCHJVM"
+  get_binpatch $PATCHJVM $DBUSER $ORACLE_HOME
+else
+  echo "Skipping JVM binary patch $PATCHJVM because it is already installed"
+fi
+check "JVM BINARY PATCH INSTALLED" "$PATCHJVM=$binpatch" `[[ "$binpatch" -eq "1" ]]; echo $?` 9050 exit
+
+for SID in $ORASIDS; do
+  export ORACLE_SID=$SID
+  if [[ "`ps -ef | grep -v grep | grep -c ora_pmon_$ORACLE_SID`" -eq "0" ]]; then
+    db_start
+    check "DB START AFTER JVM BINARY" "$dbok" `[[ "$dbok" -ne "0" ]]; echo $?` 9051 wait
+    checksids $?
+    if [[ "$?" -gt "0" ]]; then
+      continue
+    fi
+  fi
+done
+checkdone
+export ORACLE_SID=""
+
+if [[ "$OARCH" == "OLD" ]]; then
+  for SID in $ORASIDS; do
+    export ORACLE_SID=$SID
+    get_dbpatch $PATCHJVM
+    if [[ "$dbpatch" -eq "1" ]]; then
+      echo "Skipping JVM database patch $PATCHJVM because it is already installed"
+    else
+      echo "*** Applying JVM database patch to $ORACLE_SID ***"
+      echo "su $DBUSER -c \"$ORACLE_HOME/OPatch/datapatch -verbose\""
+      su $DBUSER -c "$ORACLE_HOME/OPatch/datapatch -verbose"
+
+      echo "*** Verifying JVM database patch ***"
+      get_dbpatch $PATCHJVM
+    fi
+    check "JVM DATABASE PATCH INSTALLED" "$PATCHJVM=$dbpatch" `[[ "$dbpatch" -eq "1" ]]; echo $?` 9060 wait
+    checksids $?
+  done
+  checkdone
+  export ORACLE_SID=""
+fi
+
+stamp "*** PSU patching ***"
+
+if [[ "$SKIP_PRECHECK" == "1" ]]; then
+  echo "ORACLE_SKIP_PRECHECK is set to 1; skipping PSU re-analyze before patching."
+else
+  get_analyze_auto
+  check "GRID PSU PATCH RE-ANALYZE" "$analyze" `[[ "$analyze" == "" ]]; echo $?` 128 exit
+fi
+echo "##############################"
+echo "*** Applying PSU AutoPatch ***"
+echo "##############################"
+echo "ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatchauto apply $BASEFOLDER/$PATCHID/$PATCHPSU -force_conflict"
+apply=`ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatchauto apply $BASEFOLDER/$PATCHID/$PATCHPSU -force_conflict`
+echo "$apply"
+success=`echo "$apply" | grep -i "Patching is completed successfully."`
+check "GRID PSU PATCH APPLY" "success='$success'" `[[ "$success" != "" ]]; echo $?` 128 exit
+echo "*** Checking applied grid patches"
+for pid in $GIPATCHES; do
+  get_binpatch $pid $GIUSER $GRID_HOME
+  check "GRID PSU BINARY PATCH $pid INSTALLED" "$pid=$binpatch" `[[ "$binpatch" -eq "1" ]]; echo $?` 9030 exit
+done
+echo "*** Checking applied home patches"
+for pid in $DBPATCHES; do
+  get_binpatch $pid $DBUSER $ORACLE_HOME
+  check "PSU BINARY PATCH $pid INSTALLED" "$pid=$binpatch" `[[ "$binpatch" -eq "1" ]]; echo $?` 9030 exit
+done
+
+oldlevel=`cat $OFOLDER/PATCHLEVEL-$ORACLE_VER.txt | xargs`
+if [[ "$OARCH" == "RAC" ]]; then
+  get_raclevel
+fi
+if [[ "$OARCH" == "ASM" || "$raclevel" > "$oldlevel" ]]; then
+  echo "*** Checking applied data patches"
+  get_psuid
+  for SID in $ORASIDS; do
+    export ORACLE_SID=$SID
+    get_dbpatch $psuid
+    if [[ "$dbpatch" -eq "0" ]]; then
+      echo "PSU datapatch was not installed; re-attempting datapatch"
+      su $DBUSER -c "$ORACLE_HOME/OPatch/datapatch -verbose"
+      get_dbpatch $psuid
+    fi
+    check "PSU DATABASE PATCH INSTALLED" "$psuid=$dbpatch" `[[ "$dbpatch" -eq "1" ]]; echo $?` 9040 wait
+    checksids $?
+  done
+  checkdone
+  export ORACLE_SID=""
+else
+  echo "PSU datapatch check deferred to $RACNODES"
+fi
+stamp "PSU patching completed successfully."
+
+if [[ "$OARCH" == "ASM" || "$raclevel" > "$oldlevel" ]]; then
+  for SID in $ORASIDS; do
+    export ORACLE_SID=$SID
+    echo "*** Verifying JVM database patch on $ORACLE_SID ***"
+    get_dbpatch $PATCHJVM
+    if [[ "$dbpatch" -lt "1" ]]; then
+      echo "*** Re-attempting datapatch"
+      su $DBUSER -c "$ORACLE_HOME/OPatch/datapatch -verbose"
+      get_dbpatch $PATCHJVM
+    fi
+    check "JVM DATABASE PATCH INSTALLED" "$PATCHJVM=$dbpatch" `[[ "$dbpatch" -eq "1" ]]; echo $?` 9060 wait
+    checksids $?
+  done
+  checkdone
+  export ORACLE_SID=""
+fi
+
+stamp "*** patch session cleanup ***"
+
+#if [[ "$LISTENER_HOME" == "$ORACLE_HOME" ]]; then
+#  echo "*** Starting listener ***"
+#  lsnrctl start $LISTENER
+#  sleep 2
+#  listen=`ps -ef | grep -v grep | grep $ORACLE_HOME | grep -c "tnslsnr $LISTENER"`
+#  check "LISTENER START" "$listen" `[[ "$listen" -gt "0" ]]; echo $?` 9070 hard
+#fi
+
+if [[ "$OEM_EMCTL" != "" ]]; then
+  do_oem_agent start
+  check "OEM AGENT START" "$oem" `[[ "$oem" -gt "0" ]]; echo $?` 9070 hard
+fi
+
+$OFOLDER/POSTCHECK.sh
+BADSIDS=$?
+if [[ "$BADSIDS" -gt "0" ]]; then
+  stamp "END patch session (failed postcheck)"
+  hard_exit "(Postcheck failed)"
+fi
+
+stamp "END patch session"
+_EOF_
+delete "{parameter "ODIR"}/PATCHASMRAC.sh"
+move __createfile "{parameter "ODIR"}/PATCHASMRAC.sh"
+wait chmod 755 "{parameter "ODIR"}/PATCHASMRAC.sh"
+
+
+// This is the POSTCHECK script
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+
+echo "*** Beginning postchecks for $ORACLE_VER ***"
+
+if [[ "$OARCH" != "SDB" ]]; then
+  asm_sids_online
+  check "ALL SIDS ARE ONLINE POST-PATCH" "$numsids SIDs, $numonline online" `[[ "$numonline" -ge "$numsids" ]]; echo $?` 512
+fi
+
+for SID in $ORASIDS; do
+  export ORACLE_SID=$SID
+  OLDERROR=$ERROR
+
+  echo "spfile and control file for $ORACLE_SID:"
+  su $DBUSER -c "echo 'show parameter spfile;' | sqlplus '/ as sysdba'"
+  su $DBUSER -c "echo 'select name from v\$controlfile;' | sqlplus '/ as sysdba'"
+
+  echo "Checking for invalid rows in dba_objects"
+  get_invalid objects
+  if [[ "$invalid" != "no" ]]; then
+    echo "Rebuilding invalid objects"
+    su $DBUSER -c "cd $ORACLE_HOME/rdbms/admin; sqlplus '/ as sysdba' @utlrp.sql"
+    get_invalid objects
+  fi
+  check "INVALID OBJECTS" "$invalid" `[[ "$invalid" == "no" ]]; echo $?` 2048
+
+  echo "Checking for invalid rows in dba_registry"
+  get_invalid registry
+  check "INVALID REGISTRY" "$invalid" `[[ "$invalid" == "no" ]]; echo $?` 4096
+
+  checksids `expr $ERROR - $OLDERROR`
+done
+
+if [[ "$ERROR" -gt "0" || "$BADSIDS" -gt "0" ]]; then
+  echo "!!! One or more postchecks failed for $ORACLE_VER!"
+  #exit $ERROR
+  if [[ "$BADSIDS" -eq "0" ]]; then
+    BADSIDS=1
+  fi
+  exit $BADSIDS
+else
+  echo "All postchecks passed for $ORACLE_VER."
+  echo
+  echo "Removing $BASEFOLDER"
+  rm -rf $BASEFOLDER
+fi
+_EOF_
+delete "{parameter "ODIR"}/POSTCHECK.sh"
+move __createfile "{parameter "ODIR"}/POSTCHECK.sh"
+wait chmod 755 "{parameter "ODIR"}/POSTCHECK.sh"
+
+
+// This is the ASM (non-RAC) ROLLBACK script
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+export operation="ROLLBACK"
+echo "*** Beginning ASM rollback on $ORACLE_VER ***"
+$OFOLDER/ROLLBACK1PREP.sh
+$OFOLDER/ROLLBACK2OJVM.sh
+$OFOLDER/ROLLBACK3PSU.sh
+$OFOLDER/ROLLBACK4CLEANUP.sh
+echo "*** Ending ASM rollback on $ORACLE_VER ***"
+_EOF_
+delete "{parameter "ODIR"}/ROLLBACKASM.sh"
+move __createfile "{parameter "ODIR"}/ROLLBACKASM.sh"
+
+
+
+// This is the RAC ROLLBACK script
+createfile until _EOF_
+# parameter: RAC node # (e.g. 1, 2, 3, etc.) [optional, defaults to ASM behavior]
+. {parameter "ODIR"}/INCLUDE.sh
+export operation="PRECHECK"
+stamp "*** Beginning RAC node $1 rollback on $ORACLE_VER ***"
+$OFOLDER/ROLLBACK1PREP.sh
+$OFOLDER/ROLLBACK2OJVM.sh
+$OFOLDER/ROLLBACK3PSU.sh
+$OFOLDER/ROLLBACK4CLEANUP.sh
+echo "*** Ending RAC node rollback on $ORACLE_VER ***"
+_EOF_
+delete "{parameter "ODIR"}/ROLLBACKRAC.sh"
+move __createfile "{parameter "ODIR"}/ROLLBACKRAC.sh"
+
+
+// This is the prep for ROLLBACK script
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+stamp "BEGIN rollback prep"
+
+#$OFOLDER/PRECHECK.sh
+#ERROR=$?
+#if [[ "$ERROR" -gt "0" ]]; then
+#  stamp "END rollback session (failed precheck)"
+#  exit $ERROR
+#fi
+
+echo "*** Beginning rollback on $ORACLE_VER ***"
+
+echo "Checking for at least one listener"
+listen=`ps -ef | grep -v grep | grep -c tnslsnr`
+check "LISTENER UP" $listen `[[ "$listen" -gt "0" ]]; echo $?` 9000 hard
+
+for SID in $ORASIDS; do
+  export ORACLE_SID=$SID
+
+  get_spfile
+  #check "SPFILE IS SET" $spfile `[[ "$spfile" != "" ]]; echo $?` 1025
+  checksids $?
+
+  echo "Checking that database $ORACLE_SID is up"
+  dbup=`ps -ef | grep -v grep | grep -c "ora_pmon_$ORACLE_SID"`
+  check "DATABASE UP" "$dbup" `[[ "$dbup" -gt "0" ]]; echo $?` 9001 hard
+
+  checksids $?
+done
+if [[ "$BADSIDS" -gt "0" ]]; then
+  echo "Databases are not up; aborting"
+  exit $BADSIDS
+fi
+export ORACLE_SID=""
+
+backup_spfile
+
+get_listener
+#if [[ "$LISTENER_HOME" == "$ORACLE_HOME" ]]; then
+#  echo "Stopping listener"
+#  lsnrctl stop $LISTENER
+#  sleep 2
+#  listen=`ps -ef | grep -v grep | grep $ORACLE_HOME | grep -c "tnslsnr $LISTENER"`
+#  check "LISTENER STOP" "$listen" `[[ "$listen" -eq "0" ]]; echo $?` 9020 hard
+#fi
+
+if [[ "$OARCH" != "SDB" ]]; then
+  asm_sids_online
+  check "ALL SIDS ARE ONLINE PRE-ROLLBACK" "$numsids SIDs, $numonline online" `[[ "$numonline" -ge "$numsids" ]]; echo $?` 512
+fi
+
+if [[ "$ERROR" -ne "0" ]]; then
+  stamp "Rollback prep failed"
+  notify "Failed rollback prep"
+  hard_exit
+fi
+stamp "END rollback prep"
+_EOF_
+delete "{parameter "ODIR"}/ROLLBACK1PREP.sh"
+move __createfile "{parameter "ODIR"}/ROLLBACK1PREP.sh"
+
+
+// This is the OJVM ROLLBACK script
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+stamp "BEGIN OJVM rollback session"
+
+for SID in $ORASIDS; do
+  export ORACLE_SID=$SID
+  db_stop
+  check "DB STOP BEFORE JVM BINARY" "$dbok" `[[ "$dbok" -eq "0" ]]; echo $?` 9021 wait
+  checksids $?
+done
+checkdone
+export ORACLE_SID=""
+
+echo "*** Rolling back JVM binary patch ***"
+su $DBUSER -c "$ORACLE_HOME/OPatch/opatch rollback -id $PATCHJVM -silent"
+get_binpatch $PATCHJVM $DBUSER $ORACLE_HOME
+check "JVM BINARY PATCH ROLLBACK" "$PATCHJVM=$binpatch" `[[ "$binpatch" -eq "0" ]]; echo $?` 9050 exit
+
+for SID in $ORASIDS; do
+  export ORACLE_SID=$SID
+  if [[ "`ps -ef | grep -v grep | grep -c ora_pmon_$ORACLE_SID`" -eq "0" ]]; then
+    db_start
+    check "DB START AFTER JVM BINARY" "$dbok" `[[ "$dbok" -gt "0" ]]; echo $?` 9051 wait
+    checksids $?
+    if [[ "$?" -gt "0" ]]; then
+      continue
+    fi
+  fi
+done
+checkdone
+export ORACLE_SID=""
+
+if [[ "$OARCH" == "ASM" ]]; then
+  for SID in $ORASIDS; do
+    export ORACLE_SID=$SID
+    get_dbpatch $PATCHJVM
+    if [[ "$dbpatch" -eq "0" ]]; then
+      echo "Skipping JVM database patch $PATCHJVM because it is not installed"
+    else
+      echo "*** Rolling back JVM database patch on $ORACLE_SID ***"
+      #$ORACLE_HOME/OPatch/datapatch -rollback $PATCHJVM
+      echo "su $DBUSER -c \"$ORACLE_HOME/OPatch/datapatch -verbose\""
+      su $DBUSER -c "$ORACLE_HOME/OPatch/datapatch -verbose"
+      echo "*** Verifying JVM database patch ***"
+      get_dbpatch $PATCHJVM
+    fi
+    check "JVM DATABASE PATCH ROLLBACK" "$PATCHJVM=$dbpatch" `[[ "$dbpatch" -eq "0" ]]; echo $?` 9060 wait
+    checksids $?
+  done
+  checkdone
+  export ORACLE_SID=""
+fi
+
+if [[ "$ERROR" -ne "0" ]]; then
+  stamp "OJVM rollback session failed"
+  notify "Failed OJVM rollback"
+  hard_exit
+fi
+stamp "END OJVM rollback session"
+
+echo "JVM rollback completed successfully."
+_EOF_
+delete "{parameter "ODIR"}/ROLLBACK2OJVM.sh"
+move __createfile "{parameter "ODIR"}/ROLLBACK2OJVM.sh"
+
+
+// This is the PSU ROLLBACK script
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+stamp "BEGIN PSU rollback session"
+
+echo "*** Rolling back PSU AutoPatch ***"
+stamp "Rollback starting"
+get_psuid
+
+echo "Checking for rollback conflicts for PSU $PATCHPSU"
+echo "ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatchauto rollback -analyze $BASEFOLDER/$PATCHID/$PATCHPSU"
+rollback=`ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatchauto rollback -analyze $BASEFOLDER/$PATCHID/$PATCHPSU`
+echo "$rollback"
+conflicts=`echo "$rollback" | grep 'OPatch will not roll back patch(es) ".*" until you have rolled back dependent patch(es) ".*".' | cut -d'"' -f 4 | tr ',' '\n' | sort | uniq | xargs`
+if [[ "$conflicts" == "" ]]; then
+  echo "No rollback conflicts!"
+else
+  echo "Rollback conflicts: $conflicts"
+  echo "Trying to roll back conflicts $conflicts before rolling back PSU $PATCHPSU"
+  echo "su $DBUSER -c \"$ORACLE_HOME/OPatch/opatch nrollback -id `echo $conflicts | tr ' ' ','` -force -silent\""
+  su $DBUSER -c "$ORACLE_HOME/OPatch/opatch nrollback -id `echo $conflicts | tr ' ' ','` -force -silent"
+  for conflict in $conflicts; do
+    get_binpatch $conflict $DBUSER $ORACLE_HOME
+    check "ROLLBACK CONFLICTING BINARY" "$conflict=$binpatch" `[[ "$binpatch" -eq "0" ]]; echo $?` 1
+  done
+fi
+
+echo "Trying to roll back PSU patch PSU $PATCHPSU"
+echo "ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatchauto rollback $BASEFOLDER/$PATCHID/$PATCHPSU"
+rollback=`ORACLE_HOME=$GRID_HOME; $GRID_HOME/OPatch/opatchauto rollback $BASEFOLDER/$PATCHID/$PATCHPSU`
+echo "$rollback"
+stamp "Rollback finished"
+rollbackfail=`echo "$rollback" | grep -i "failed"`
+check "ROLLBACK OPATCHAUTO" "$rollbackfail" `[[ "$rollbackfail" == "" ]]; echo $?` 9039 exit
+rebootrec=`echo "$rollback" | grep -c 'A system reboot is recommended before using ACFS'`
+check "ROLLBACK COMPLETED WITH NO REBOOT REQUIRED" "reboot=$rebootrec" `[[ "rebootrec" -eq "0" ]]; echo $?` 9039 exit
+
+oldlevel=`cat $OFOLDER/PATCHLEVEL-$ORACLE_VER.txt | xargs`
+echo "Checking rolled back grid PSU patches against patch level $oldlevel"
+get_homelevel $GIUSER $GRID_HOME
+check "GRID PATCH LEVEL" "$homelevel" `[[ "$homelevel" < "$oldlevel" ]]; echo $?` 9090 exit
+echo "Checking rolled back home PSU patches against patch level $oldlevel"
+get_homelevel $DBUSER $ORACLE_HOME
+check "HOME PATCH LEVEL" "$homelevel" `[[ "$homelevel" < "$oldlevel" ]]; echo $?` 9090 exit
+
+if [[ "$OARCH" == "RAC" ]]; then
+  get_raclevel
+fi
+if [[ "$OARCH" == "ASM" || "$raclevel" < "$oldlevel" ]]; then
+  for SID in $ORASIDS; do
+    export ORACLE_SID=$SID
+    get_dbpatch $psuid
+    if [[ "$dbpatch" -gt "0" ]]; then
+      echo "PSU datapatch is still installed; re-attempting datapatch"
+      su $DBUSER -c "$ORACLE_HOME/OPatch/datapatch -verbose"
+      get_dbpatch $psuid
+    fi
+    check "PSU DATA PATCH ROLLBACK" "$psuid=$dbpatch" `[[ "$dbpatch" -eq "0" ]]; echo $?` 9040 wait
+    checksids $?
+  done
+  checkdone
+  export ORACLE_SID=""
+else
+  echo "PSU datapatch rollback check deferred to $RACNODES"
+fi
+stamp "PSU rollback completed successfully."
+
+if [[ "$OARCH" == "RAC" && "$raclevel" < "$oldlevel" ]]; then
+  for SID in $ORASIDS; do
+    export ORACLE_SID=$SID
+    echo "*** Verifying JVM database patch rollback on $ORACLE_SID ***"
+    get_dbpatch $PATCHJVM
+    if [[ "$dbpatch" -gt "0" ]]; then
+      echo "*** Re-attempting datapatch"
+      su $DBUSER -c "$ORACLE_HOME/OPatch/datapatch -verbose"
+      get_dbpatch $PATCHOJVM
+    fi
+    check "JVM DATABASE PATCH ROLLED BACK" "$PATCHJVM=$dbpatch" `[[ "$dbpatch" -eq "0" ]]; echo $?` 9060 wait
+    checksids $?
+  done
+  checkdone
+  export ORACLE_SID=""
+fi
+
+if [[ "$ERROR" -ne "0" ]]; then
+  stamp "PSU rollback session failed"
+  notify "Failed PSU rollback"
+  hard_exit
+fi
+stamp "END PSU patch session"
+_EOF_
+delete "{parameter "ODIR"}/ROLLBACK3PSU.sh"
+move __createfile "{parameter "ODIR"}/ROLLBACK3PSU.sh"
+
+
+// This is the cleanup for ROLLBACK script
+createfile until _EOF_
+. {parameter "ODIR"}/INCLUDE.sh
+echo "BEGIN rollback cleanup"
+
+#if [[ "$LISTENER_HOME" == "$ORACLE_HOME" ]]; then
+#  echo "*** Starting listener ***"
+#  lsnrctl start $LISTENER
+#  sleep 2
+#  listen=`ps -ef | grep -v grep | grep $ORACLE_HOME | grep -c "tnslsnr $LISTENER"`
+#  check "LISTENER START" "$listen" `[[ "$listen" -gt "0" ]]; echo $?` 9070 hard
+#fi
+
+$OFOLDER/POSTCHECK.sh
+ERROR=$?
+if [[ "$ERROR" -gt "0" ]]; then
+  stamp "END rollback cleanup (failed postcheck)"
+  hard_exit
+fi
+
+stamp "END rollback cleanup"
+_EOF_
+delete "{parameter "ODIR"}/ROLLBACK4CLEANUP.sh"
+move __createfile "{parameter "ODIR"}/ROLLBACK4CLEANUP.sh"
+
+
+// This is the LOGROTATE script
+createfile until _EOF_
+OFOLDER={parameter "ODIR"}
+LOGFOLDER=$OFOLDER/logs
+
+if [[ ! -d $LOGFOLDER ]]; then
+  mkdir $LOGFOLDER
+fi
+echo "Log folder is $LOGFOLDER"
+
+case $1 in
+    ''|*[!0-9]*) LOGLIMIT=365 ;;
+    *) LOGLIMIT=$1 ;;
+esac
+echo "Limiting logs to $LOGLIMIT days old"
+
+if [[ "$2" != "" ]]; then
+  PREFIXES=$2
+else
+  PREFIXES=`ls $OFOLDER/*-*.log | rev | cut -d'/' -f 1 | rev | cut -d'-' -f 1,2 | cut -d'.' -f 1,2,3 | sort -u`
+fi
+echo "Checking logs with prefix:" $PREFIXES
+
+for LOGPREFIX in $PREFIXES; do
+  echo
+  echo "*** Log files that start with $LOGPREFIX ***"
+
+  for logfile in `ls $OFOLDER/$LOGPREFIX*.log`; do
+    if [[ "`uname`" == "AIX" ]]; then
+      suffix=`istat $OFOLDER/STATUS.sh | grep 'Last modified:' | awk '{{print $8,$4,$5 "-" $6}' | awk -F: '{{print $1 $2 $3}'`
+	  month=`echo $suffix | awk '{{print $2}'`
+      months="JanFebMarAprMayJunJulAugSepOctNovDec"
+      monthfound=${{months%%$month*}
+      monthidx=${{#monthfound}
+      monthnumber=$((monthidx/3+1))
+      monthnumber=`printf "%02d\n" $monthnumber`
+      suffix=`echo $suffix | sed "s/ $month /$monthnumber/"`
+    else
+      suffix=`date -r $logfile "+%Y%m%d-%H%M%S"`
+    fi
+    oldname=`echo $logfile | rev | cut -d'/' -f 1 | rev`
+    newname=`echo "$oldname" | cut -d'-' -f 1,2 | cut -d'.' -f 1,2,3`-$suffix.log
+    echo "Copying $oldname to log folder as $newname"
+    cp -f $OFOLDER/$oldname $LOGFOLDER/$newname
+  done
+
+  cutoff=`date -d "-$LOGLIMIT days" "+%Y%m%d-%H%M%S"`
+  echo "Will remove logs older than $cutoff"
+  for logfile in `ls $LOGFOLDER/$LOGPREFIX*.log`; do
+    suffix=`echo $logfile | cut -d'-' -f 3,4 | cut -d'.' -f 1`
+    if [[ "$suffix" < "$cutoff" ]]; then
+      echo "Removing $logfile"
+      rm -f $logfile
+    fi
+  done
+
+done
+echo
+echo "Finished."
+_EOF_
+delete "{parameter "ODIR"}/LOGROTATE.sh"
+move __createfile "{parameter "ODIR"}/LOGROTATE.sh"
+
+
+// Make all the scripts accessible
+wait bash -c "chmod 755 {parameter "ODIR"}/*.sh"
+
+// Set script version so it can be checked by fixlets
+createfile until _EOF_
+1.3.3
+_EOF_
+delete "{parameter "ODIR"}/SCRIPTVERSION.txt"
+move __createfile "{parameter "ODIR"}/SCRIPTVERSION.txt"
+
+// fail the action if the update script failed
+if { parameter "exitcode" > "0" }
+  exit {parameter "exitcode"}
+endif
+            ]]></ActionScript>
+		</DefaultAction>
+	</Task>
+</BES>

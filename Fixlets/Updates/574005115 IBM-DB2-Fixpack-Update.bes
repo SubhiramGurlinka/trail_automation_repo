@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: IBM DB2 v11.5.9.0 - Linux</Title>
+		<Description><![CDATA[<p>This will update IBM DB2 to version 11.5.9.0.</p>
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "IBM DB2 v11.5.9.0" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 1966221224
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>		<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual database back up.</li>		</ul>
+]]></Description>
+		<Relevance>unix of operating system</Relevance>
+		<Relevance><![CDATA[exists unique values whose (it as version >= "11.5") of (it as trimmed string as version) of following texts of firsts "=" of following texts of firsts "architecture_level" of lines containing "architecture_level" of files "spec" of folders ".metadata/BASE_DB2_ENGINE" of folders of folders "/opt/ibm/db2"]]></Relevance>
+		<Relevance><![CDATA[not exists unique values whose (it as version >= "11.5.9.0") of (it as trimmed string as version) of following texts of firsts "=" of following texts of firsts "architecture_level" of lines containing "architecture_level" of files "spec" of folders ".metadata/BASE_DB2_ENGINE" of folders of folders "/opt/ibm/db2"]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>1966221224</DownloadSize>
+		<Source>IBM</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-03-19</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"11.5.9.0","size":1966221224 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp IBM</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:ibm:ibm_db2:11.5.9.0:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Tue, 19 Mar 2024 15:14:00 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy the fix pack.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch v11.5.9_linuxx64_universal_fixpack.tar.gz sha1:61617818d71e91cde151f7f6bd66c3988274139c size:1966221224 https://localhost:52311/Uploads/61617818d71e91cde151f7f6bd66c3988274139c/v11.5.9_linuxx64_universal_fixpack.tar.gz sha256:fbf2db621b3ba6721efa0ea0343a7fcb06e57ad903dca134d6735f15117b2e8b
+
+parameter "patch_tmp" = "/tmp/patch_tmp/"
+
+// delete patch tmp folder if exists:
+folder delete "{parameter "patch_tmp"}"
+
+// create patch tmp folder:
+folder create "{parameter "patch_tmp"}"
+
+// Move archive file to patch temp
+wait cp __Download/v11.5.9_linuxx64_universal_fixpack.tar.gz {parameter "patch_tmp"}
+
+wait sh -c "cd '{parameter "patch_tmp"}'; tar -xf v11.5.9_linuxx64_universal_fixpack.tar.gz"
+wait sh -c "cd '{parameter "patch_tmp"}'/universal/; ./installFixPack -y -b /opt/ibm/db2/V11.5/ -n" >>{ parameter "patch_tmp" }/output.log
+
+// Clean up
+folder delete "{parameter "patch_tmp"}"
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

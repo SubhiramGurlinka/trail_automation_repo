@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: Postgresql v16.3 - Ubuntu 20.04 (x64)</Title>
+		<Description><![CDATA[
+				<div>
+				  This Fixlet
+				  will download and
+				  update
+
+				  "Postgresql v16.3" onto selected endpoints.
+				  <br /><br /><b>Download Size:</b> 17472224
+
+				  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+				</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual database back up.</li>		</ul>
+						See Also: Postgresql vulnerabilities: <A HREF="https://www.postgresql.org/support/security/">https://www.postgresql.org/support/security/</A>
+]]></Description>
+		<Relevance>((exists match (regex "Ubuntu( Server|)( LTS|) (20.04)") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists package "postgresql-16" of debianpackages]]></Relevance>
+
+				<Relevance><![CDATA[not exists package "postgresql-16" whose (version of it >= "16.3-1PGDG20.04+1") of debianpackages]]></Relevance>
+						<Category>Update</Category>
+		<DownloadSize>17472224</DownloadSize>
+		<Source>Postgresql</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-05-09</SourceReleaseDate>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"16.3","size":17472224 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp Postgresql</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:postgresql:postgresql:16.3:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Thu, 23 May 2024 22:38:50 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+				<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy Postgresql v16.3.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch postgresql_3.deb sha1:efd129cd9eb4f076d5d05e8625206d0a06b7559a size:17472224 https://download.postgresql.org/pub/repos/apt/pool/main/p/postgresql-16/postgresql-16_16.3-1.pgdg20.04+1_amd64.deb sha256:2b5fb9f6787ab79aef591907db62bdd7907fe4cdec10be9026c627e1146d2955
+prefetch postgresql_1.deb sha1:7f467792ef21530dca6ec8c26d0faed7f484de57 size:215604 https://download.postgresql.org/pub/repos/apt/pool/main/p/postgresql-16/libpq5_16.3-1.pgdg20.04+1_amd64.deb sha256:5fca834cc237107476e1371b86e659b454d670b5e8668571f374cdb822008847
+prefetch postgresql_2.deb sha1:ab72fa4761d094a5905970d2435f8cd72188c300 size:1892804 https://download.postgresql.org/pub/repos/apt/pool/main/p/postgresql-16/postgresql-client-16_16.3-1.pgdg20.04+1_amd64.deb sha256:f0b4f144b21457b1415dbb74eb4159d41d7a2f99b8325a872e72fddb76d06bb4
+
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1109/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) focal") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/postgresql*rpm"
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "SuSE.* (focal)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/postgresql*rpm"
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) (20.04)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait /bin/bash "./__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/postgresql*deb"
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

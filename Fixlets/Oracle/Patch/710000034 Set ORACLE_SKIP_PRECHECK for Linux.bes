@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Set ORACLE_SKIP_PRECHECK</Title>
+		<Description><![CDATA[<P>This fixlet sets the client setting "ORACLE_SKIP_PRECHECK" to 1</P>
+<P>which causes the Oracle DB <STRONG>patch</STRONG> fixlets to NOT run prechecks before patching, in order to save time during the patch window.</P>
+<P>It is important to run the Oracle DB <STRONG>precheck</STRONG> fixlets before running the patch fixlets, especially if ORACLE_SKIP_PRECHECK is enabled.</P>]]></Description>
+		<Relevance>not exists setting "ORACLE_SKIP_PRECHECK" whose (value of it = "1") of client</Relevance>
+		<Category></Category>
+		<Source>Internal</Source>
+		<SourceID></SourceID>
+		<SourceReleaseDate>2024-03-14</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 01 Apr 2024 12:00:00 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell">setting "ORACLE_SKIP_PRECHECK"="1" on "{parameter "action issue date" of action}" for client</ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

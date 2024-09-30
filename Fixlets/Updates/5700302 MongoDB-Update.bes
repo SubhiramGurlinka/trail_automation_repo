@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: MongoDB v7.0.12 - SUSE 12 (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "MongoDB v7.0.12" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 53292119
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual database back up.</li>		</ul>
+]]></Description>
+		<Relevance>((exists match (regex "SuSE.* (12)") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists package "mongodb-org" of rpm]]></Relevance>
+
+				<Relevance><![CDATA[not exists package "mongodb-org" whose (version of it >= "7.0.12") of rpm]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>53292119</DownloadSize>
+		<Source>MongoDB</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-06-28</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"7.0.12","size":53292119 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp MongoDB</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:mongodb:mongodb:7.0.12:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 22 Jul 2024 04:28:25 +0000</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded-id</Name>
+			<Value>5700301</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded_date</Name>
+			<Value>2024-07-22</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  Community Edition v7.0.12.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch mongodb-database-tools-100._suse_12.x86_64.rpm sha1:f75e69152d9d6454667284d1e970adea334810d3 size:53292119 https://repo.mongodb.org/zypper/suse/12/mongodb-org/7.0/x86_64/RPMS/mongodb-database-tools-100.9.5-1.x86_64.rpm sha256:e325f35d84f440793d18ef87b6311836bf9a606e64e40a5209e6a65dbd334f20
+prefetch mongodb-mongosh-_suse_12.x86_64.rpm sha1:080ca3f95f9743d4fdedfd77fc3394aabb6ee697 size:58502840 https://repo.mongodb.org/zypper/suse/12/mongodb-org/7.0/x86_64/RPMS/mongodb-mongosh-2.2.12.x86_64.rpm sha256:7e49301b8b08f5b7b753243e6be4ed72969fbdabe071188f68dcfb9ae0152e38
+prefetch mongodb-org-tools-_suse_12.x86_64.rpm sha1:38a9028c1058c555a8a54cc6f136faeee54885d2 size:6217 https://repo.mongodb.org/zypper/suse/12/mongodb-org/7.0/x86_64/RPMS/mongodb-org-tools-7.0.12-1.suse12.x86_64.rpm sha256:1c9b3c4c36578d1643f9a184b01ad07fdfed54eab57c200bd79fba972b47c0ef
+prefetch mongodb-org-_suse_12.x86_64.rpm sha1:5b60770ab4bb106497135a3b19d9eeebb9a4f298 size:6221 https://repo.mongodb.org/zypper/suse/12/mongodb-org/7.0/x86_64/RPMS/mongodb-org-7.0.12-1.suse12.x86_64.rpm sha256:119b7032f0eae94cfaa357eaa35a9380cc6c9701521376300f755e7520eedca3
+prefetch mongodb-org-database-_suse_12.x86_64.rpm sha1:da164c5ea86c008f3e58900975eb3b697f0aa75e size:6329 https://repo.mongodb.org/zypper/suse/12/mongodb-org/7.0/x86_64/RPMS/mongodb-org-database-7.0.12-1.suse12.x86_64.rpm sha256:90f093436d8e5d6acdc7376dc2759538d7e91c3b851781936cc18b5cace10b10
+prefetch mongodb-org-database-tools-extra-_suse_12.x86_64.rpm sha1:2f6fc4ecb465f49383abbf1c02558bc81f9194ce size:11409 https://repo.mongodb.org/zypper/suse/12/mongodb-org/7.0/x86_64/RPMS/mongodb-org-database-tools-extra-7.0.12-1.suse12.x86_64.rpm sha256:c3504efb8bae6a9e64565dec941f525443ce1cc983a4d006d4635d5e8e6dba6f
+prefetch mongodb-org-mongos-_suse_12.x86_64.rpm sha1:8f7e8177e02d017a171601ede6cffdeebe59b2dc size:23445809 https://repo.mongodb.org/zypper/suse/12/mongodb-org/7.0/x86_64/RPMS/mongodb-org-mongos-7.0.12-1.suse12.x86_64.rpm sha256:8afe2e61dc8727b9465783dc6cb317b0a666768876fde0feaa3dbf24b0a2b785
+prefetch mongodb-org-server-_suse_12.x86_64.rpm sha1:68e9d9628a31931abc653fa29d2b963a72a66bf6 size:33931675 https://repo.mongodb.org/zypper/suse/12/mongodb-org/7.0/x86_64/RPMS/mongodb-org-server-7.0.12-1.suse12.x86_64.rpm sha256:c3b1f5ad7b672c26bdeb4c170910dce4a5e93d71a8eace3e3f5010d106213640
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1119/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 12") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*rpm"
+continue if {exit code of action = 0}
+
+
+elseif {((exists match (regex "SuSE.* (12)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*rpm"
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) (999)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait /bin/bash "./__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mongodb*deb"
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

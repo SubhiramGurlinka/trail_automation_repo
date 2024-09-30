@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: IBM MQ v9.2.0.27 - RHEL Family</Title>
+		<Description><![CDATA[<p>This will update IBM MQ to version 9.2.0.27.</p>]]></Description>
+		<Relevance>architecture of operating system = "x86_64"</Relevance>
+		<Relevance><![CDATA[exists versions whose(it as string starts with "9.2.0") of packages whose(name of it starts with "MQSeriesRuntime") of rpms]]></Relevance>
+		<Relevance><![CDATA[not exists packages whose (name of it starts with "MQSeriesRuntime" AND rpm version record of it >= rpm package version record "9.2.0-27") of rpm]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>960047018</DownloadSize>
+		<Source>IBM</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-09-23</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"9.2.0.27","size":960047018 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp IBM</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:ibm:ibm_mq:9.2.0.27:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 23 Sep 2024 09:18:42 +0000</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded-id</Name>
+			<Value>57400495</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded_date</Name>
+			<Value>2024-09-25</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy the fix pack.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch 9.2.0-IBM-MQ-LinuxX64-FP0027.tar.gz sha1:3b11849775b4cb7f7fd8b2cb1aceda9a728e9f42 size:960047018 https://localhost:52311/Uploads/3b11849775b4cb7f7fd8b2cb1aceda9a728e9f42/9.2.0-IBM-MQ-LinuxX64-FP0027.tar.gz sha256:6cc524befb1bd2af3b22d368d4e96760511a72dfed5e39dfbfb67f441e095f61
+
+parameter "patch_tmp" = "/var/tmp/patch_tmp/"
+
+// delete patch tmp folder if exists:
+folder delete "{parameter "patch_tmp"}"
+
+// create patch tmp folder:
+folder create "{parameter "patch_tmp"}"
+
+// Move archive file to patch temp
+wait mv __Download/9.2.0-IBM-MQ-LinuxX64-FP0027.tar.gz {parameter "patch_tmp"}
+
+wait sh -c "cd '{parameter "patch_tmp"}'; /usr/bin/tar -xf 9.2.0-IBM-MQ-LinuxX64-FP0027.tar.gz"
+wait sh -c "cd '{parameter "patch_tmp"}'; /usr/bin/rpm -Uvh *.rpm"
+
+// Clean up
+folder delete "{parameter "patch_tmp"}"
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

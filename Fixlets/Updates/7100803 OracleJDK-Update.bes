@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: OracleJDK v17.0.12 - Debian Family (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "OracleJDK v17.0.12" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 156965640
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual backup of System Preferences (if any).</li>		</ul>
+]]></Description>
+		<Relevance><![CDATA[exists debianpackages]]></Relevance>
+		<Relevance><![CDATA[exists versions whose(it as string starts with "17") of packages whose(name of it starts with "jdk") of debianpackages]]></Relevance>
+		<Relevance><![CDATA[not exists (it as version) whose(it >= "17.0.12") of first matches (regex "[0-9]+(\.[0-9]+)+") of ((it as string) of packages whose (name of it starts with "jdk") of debianpackages)]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>156965640</DownloadSize>
+		<Source>Oracle</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-07-22</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"17.0.12","size":156965640 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp Oracle</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:oracle:oraclejdk:17.0.12:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 22 Jul 2024 05:46:38 +0000</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded-id</Name>
+			<Value>7100802</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded_date</Name>
+			<Value>2024-07-22</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  v17.0.12.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch jdk-17_linux-x64_bin.deb sha1:3c0fd967129d7dc7b24ec30609c87cfc01a7cc23 size:156965640 https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.deb sha256:7eb65d7414a76eec9bc6f3ca90ac17ae81440ea6376174e33922ccc27fd8e736
+
+wait /bin/bash -c "cd './__Download' && dpkg -i *.deb"
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

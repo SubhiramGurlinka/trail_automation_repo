@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: OracleJDK v17.0.10 - Debian Family (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "OracleJDK v17.0.10" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 156687222
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual backup of System Preferences (if any).</li>		</ul>
+]]></Description>
+		<Relevance><![CDATA[exists debianpackages]]></Relevance>
+		<Relevance><![CDATA[exists versions whose(it as string starts with "17") of packages whose(name of it starts with "jdk") of debianpackages]]></Relevance>
+		<Relevance><![CDATA[not exists (it as version) whose(it >= "17.0.10") of first matches (regex "[0-9]+(\.[0-9]+)+") of ((it as string) of packages whose (name of it starts with "jdk") of debianpackages)]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>156687222</DownloadSize>
+		<Source>Oracle</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-03-06</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"17.0.10","size":156687222 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp Oracle</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:oracle:oraclejdk:17.0.10:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Wed, 06 Mar 2024 10:04:00 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  v17.0.10.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch jdk-17_linux-x64_bin.deb sha1:fd41d74f63d44539ee18a37375d59b7687be4faf size:156687222 https://download.oracle.com/java/17/archive/jdk-17.0.10_linux-x64_bin.deb sha256:0871ec2276b3440ab03e4bb1e77a9d7645f82eb9d6c449d743a585845c370269
+
+wait /bin/bash -c "cd './__Download' && dpkg -i *.deb"
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

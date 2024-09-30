@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: MySQL v8.0.39 - RedHat / CentOS / OEL 7 (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "MySQL v8.0.39" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 1046016000
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual database back up.</li>		</ul>
+		<p>Note: The version 8.0.38 has been removed from the vendor's site</p>
+]]></Description>
+		<Relevance>((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 7") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists packages ("mysql-community-server") of rpm]]></Relevance>
+
+				<Relevance><![CDATA[not exists packages ("mysql-community-server") whose (version of it >= "8.0.39") of rpm]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>1046016000</DownloadSize>
+		<Source>MySQL</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-07-13</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"8.0.39","size":1046016000 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp MySQL</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:mysql:mysql:8.0.39:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Wed, 07 Aug 2024 09:05:37 +0000</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded-id</Name>
+			<Value>26901001</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded_date</Name>
+			<Value>2024-07-22</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  v8.0.39.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch mysql-LATESTVER-1.el7.x86_64.rpm-bundle.tar sha1:48088074a56290674a93ea36a409b8b45a31a6d3 size:1046016000 https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.39-1.el7.x86_64.rpm-bundle.tar sha256:470318ad10d839cb5903f512602ca3035e5d56e51c433e9375bfcceac830c5a9
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1119/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 7") of name of it) AND (architecture of it = "x86_64")) of operating system}
+
+wait tar -xvf "./__Download/mysql-LATESTVER-1.el7.x86_64.rpm-bundle.tar" -C "./__Download/"
+
+wait /bin/bash "./__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mysql*rpm"
+
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "SuSE.* (7)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+
+wait tar -xvf "./__Download/mysql-LATESTVER-1.el7.x86_64.rpm-bundle.tar" -C "./__Download/"
+
+wait /bin/bash "./__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mysql*rpm"
+
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) ()") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait tar -xvf "./__Download/mysql-LATESTVER-1.el7.x86_64.rpm-bundle.tar" -C "./__Download/"
+
+wait /bin/bash "./__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mysql*deb"
+
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

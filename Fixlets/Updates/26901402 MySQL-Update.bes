@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: MySQL v8.0.39 - Ubuntu 22.04 (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "MySQL v8.0.39" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 444569600
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual database back up.</li>		</ul>
+		<p>Note: The version 8.0.38 has been removed from the vendor's site</p>
+]]></Description>
+		<Relevance>((exists match (regex "Ubuntu( Server|)( LTS|) (22.04)") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists packages ("MySQL-server";"mysql-community-server") of debianpackages]]></Relevance>
+
+				<Relevance><![CDATA[not exists packages ("MySQL-server";"mysql-community-server") whose (version of it >= "8.0.39") of debianpackages]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>444569600</DownloadSize>
+		<Source>MySQL</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-07-13</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"8.0.39","size":444569600 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp MySQL</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:mysql:mysql:8.0.39:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Wed, 07 Aug 2024 09:05:36 +0000</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded-id</Name>
+			<Value>26901401</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded_date</Name>
+			<Value>2024-07-22</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  v8.0.39.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch mysql-server_LATESTVER-1ubuntu22.04_amd64.deb-bundle.tar sha1:e4e2a6d6b41b5ba022d52308dfb676352be029b0 size:444569600 https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-server_8.0.39-1ubuntu22.04_amd64.deb-bundle.tar sha256:52765d73feed41ae7f2ffc7d73e4fb4cbd3bb14d73a6e5ae459d02e7a9b01d98
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1119/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) Jammy") of name of it) AND (architecture of it = "x86_64")) of operating system}
+
+wait tar -xvf "./__Download/mysql-server_LATESTVER-1ubuntu22.04_amd64.deb-bundle.tar" -C "./__Download/"
+
+wait /bin/bash "./__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mysql*rpm"
+
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "SuSE.* (Jammy)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+
+wait tar -xvf "./__Download/mysql-server_LATESTVER-1ubuntu22.04_amd64.deb-bundle.tar" -C "./__Download/"
+
+wait /bin/bash "./__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mysql*rpm"
+
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) (22.04)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait tar -xvf "./__Download/mysql-server_LATESTVER-1ubuntu22.04_amd64.deb-bundle.tar" -C "./__Download/"
+
+wait /bin/bash "./__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/mysql*deb"
+
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

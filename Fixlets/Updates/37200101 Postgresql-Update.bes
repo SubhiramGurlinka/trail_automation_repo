@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: Postgresql v14.4 - RedHat / CentOS / OEL 7 (x64)</Title>
+		<Description><![CDATA[
+<div>
+  This Fixlet
+  will download and
+  update
+
+  "Postgresql v14.4" onto selected endpoints.
+  <br /><br /><b>Download Size:</b> 1570072
+
+  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+</div>See Also: Postgresql vulnerabilities: <A HREF="https://www.postgresql.org/support/security/</A>
+]]></Description>
+		<Relevance>((exists match (regex "(Oracle Enterprise|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 7") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists package "postgresql-server" of rpm]]></Relevance>
+
+				<Relevance><![CDATA[not exists package "postgresql-server" whose (version of it >= "14.4") of rpm]]></Relevance>
+				<Category>Update</Category>
+		<DownloadSize>1570072</DownloadSize>
+		<Source>Postgresql</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2022-06-29</SourceReleaseDate>
+		<SourceSeverity>Important</SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"14.4","size":1570072 }
+</Value>
+		</MIMEField>
+
+				<MIMEField>
+					<Name>x-fixlet-cpe23-item-name</Name>
+					<Value><![CDATA[cpe:2.3:a:postgresql:postgresql:14.4:*:*:*:*:*:*:*]]></Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Wed, 29 Jun 2022 16:20:44 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+				<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy Postgresql v14.4.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+
+prefetch _redhat_7.x86_64.rpm sha1:51e26175ae39797f4b54321c3042ddfba7f600b7 size:1570072 https://download.postgresql.org/pub/repos/yum/14/redhat/rhel-7-x86_64/postgresql14-14.4-1PGDG.rhel7.x86_64.rpm sha256:15f0f96583f3dbd31fdf0133bb377bb3799701e238591e911b1e9c3ddf4dc061
+prefetch -server_redhat_7.x86_64.rpm sha1:7226b274dd99ab632d3c26d02e880e5a0c45ceed size:5746484 https://download.postgresql.org/pub/repos/yum/14/redhat/rhel-7-x86_64/postgresql14-server-14.4-1PGDG.rhel7.x86_64.rpm sha256:dd0e1968f8e45312f0dec8d65cf7ee8c2abb615bbf08a31f4ef831797b6e20f8
+prefetch -libs_redhat_7.x86_64.rpm sha1:db88df7a4bdb50e75aeb0e5caebcb41290031da9 size:274820 https://download.postgresql.org/pub/repos/yum/14/redhat/rhel-7-x86_64/postgresql14-libs-14.4-1PGDG.rhel7.x86_64.rpm sha256:66e098f33c97eb667b5ed74982b566a354d07ff018437e5c911c17fae8c00a93
+
+if {((exists match (regex "(CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 7") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+override wait
+completion=job
+wait rpm -ivh __Download\postgresql*rpm
+
+elseif {((exists match (regex "SuSE.* (7)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+override wait
+completion=job
+wait rpm -ivh  __Download\postgresql*rpm
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) (999)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+override wait
+completion=job
+wait dpkg --install  __Download\postgresql*deb
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>

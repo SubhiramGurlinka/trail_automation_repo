@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: RedHat JBoss EAP v7.4.18 - Linux Unix</Title>
+		<Description><![CDATA[<DIV class=FixletMessage>
+<TABLE>
+<TBODY>
+<TR>
+<TD>
+<P>An updated version of Red Hat JBoss EAP is available. This Fixlet updates version 7.4 --&gt; 7.4.18</P>
+<br/>
+<p><strong>Prerequisites:</strong>
+<ul>
+<li>This content requires manual caching on the root server.</li></ul>
+</P>
+<P><BR><B>Note:</B> Once the update runs successfully, affected computers might report back as 'Pending Restart' but will not report back their final status until the computer is restarted.</P>
+<P><BR><B>Note:</B> JBoss installations are checked in specific folders (eg: /opt/jboss) or default installation folders. Set the JBOSS_HOME environment variable inside /etc/environment if Jboss EAP is installed in custom folder.</P></TD></TR></TBODY></TABLE></DIV>]]></Description>
+		<Relevance>unix of operating system</Relevance>
+		<Relevance><![CDATA[exists (it as version) whose(it = "7.4") of parenthesized parts of matches (regex "Version ([0-9]+\.[0-9]+\.[0-9]+)") of unique values of lines containing "JBoss" of files "version.txt" of (( ( folders "/opt/jboss" ) ; ( (folders it) of values of variables ("EAP_HOME";"JBOSS_HOME") of environments ) ; ( folders whose(name of it as lowercase contains "eap" OR name of it as lowercase contains "jboss") of folders of folders "/home" ) ; ( folders "root/usr/share/wildfly" of folders whose(name of it as lowercase contains "eap") of folders "/opt/rh" ) ; ( (folders it) of unique values of (concatenations of substrings separated by "%22" of it) of keys "JBOSS_HOME" of files ("/etc/default/jboss-eap.conf"; "/etc/environment") ) ) )]]></Relevance>
+		<Relevance><![CDATA[not exists (it as version) whose(it>= "7.4.18") of parenthesized parts of matches (regex "Version ([0-9]+\.[0-9]+\.[0-9]+)") of unique values of lines containing "JBoss" of files "version.txt" of (( ( folders "/opt/jboss" ) ; ( (folders it) of values of variables ("EAP_HOME";"JBOSS_HOME") of environments ) ; ( folders whose(name of it as lowercase contains "eap" OR name of it as lowercase contains "jboss") of folders of folders "/home" ) ; ( folders "root/usr/share/wildfly" of folders whose(name of it as lowercase contains "eap") of folders "/opt/rh" ) ; ( (folders it) of unique values of (concatenations of substrings separated by "%22" of it) of keys "JBOSS_HOME" of files ("/etc/default/jboss-eap.conf"; "/etc/environment") ) ) )]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>192451413</DownloadSize>
+		<Source>RedHat</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-08-28</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"7.4.18","size":192451413 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp RedHat</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:redhat:redhat_jboss:7.4.18:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Wed, 28 Aug 2024 10:17:26 +0000</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded-id</Name>
+			<Value>575001742</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded_date</Name>
+			<Value>2024-08-29</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<Action ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to execute this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch jboss-eap-7.4.18-patch.zip sha1:b3f7347241f82d9b8db3ff5f6fcd288685362697 size:192451413 https://localhost:52311/Uploads/b3f7347241f82d9b8db3ff5f6fcd288685362697/jboss-eap-7.4.18-patch.zip sha256:0682dcc673065ddb173b7988a79475e31a25a91aebcb312dbce26914626cb2f5
+
+// finding Installation folder location
+parameter "path_loc" = "{ unique value of locations of folders whose (name of it = "bin") of it whose(exists (it as version) whose(it = "7.4") of parenthesized parts of matches (regex "Version ([0-9]+\.[0-9]+\.[0-9]+)") of unique values of lines containing "JBoss" of files "version.txt" of it) of ( ( ( folders "/opt/jboss" ) ; ( (folders it) of values of variables ("EAP_HOME";"JBOSS_HOME") of environments ) ; ( folders whose(name of it as lowercase contains "eap" OR name of it as lowercase contains "jboss") of folders of folders "/home" ) ; ( folders "root/usr/share/wildfly" of folders whose(name of it as lowercase contains "eap") of folders "/opt/rh" ) ; ( (folders it) of unique values of (concatenations of substrings separated by "%22" of it) of keys "JBOSS_HOME" of files ("/etc/default/jboss-eap.conf"; "/etc/environment") ) ) ) }"
+// set Websphere Application Server directory:
+parameter "bindir" = "{parameter "path_loc"}/bin/"
+
+// stage patches in temporary patch directory:
+parameter "patch_tmp" = "{parameter "path_loc"}/patch_tmp"
+
+// delete patch tmp folder if exists:
+folder delete "{parameter "patch_tmp"}"
+
+// create patch tmp folder:
+folder create "{parameter "patch_tmp"}"
+
+// move patch zip into patch_tmp:
+wait mv __Download/jboss-eap-7.4.18-patch.zip {parameter "patch_tmp"}
+
+delete __createfile
+
+createfile until _END_OF_FILE_
+
+cd { parameter "bindir" }
+
+./jboss-cli.sh "patch apply { parameter "patch_tmp" }/jboss-eap-7.4.18-patch.zip" >> { parameter "patch_tmp" }/run.log
+
+
+_END_OF_FILE_
+
+// change this to be relative to patch_tmp:
+delete "{parameter "patch_tmp"}/run.sh"
+copy __createfile "{parameter "patch_tmp"}/run.sh"
+
+// Change permissions:
+// TODO: determine least permissions required instead of 777:
+wait chmod -R 777 "{parameter "patch_tmp"}"
+
+// run patch application
+override wait
+completion=job
+timeout_seconds=3600
+disposition=terminate
+wait bash "{parameter "patch_tmp"}/run.sh" >> {parameter "patch_tmp"}/run.log
+
+continue if { exists files whose (name of it starts with "run" AND content of it contains "success") of folder (parameter "patch_tmp") }
+
+continue if { 0 = exit code of action }
+
+// End]]></ActionScript>
+		</Action>
+	</Fixlet>
+</BES>

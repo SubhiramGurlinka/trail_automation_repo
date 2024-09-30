@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: OracleJDK v11.0.24 - Debian Family (x64)</Title>
+		<Description><![CDATA[
+		<div>
+		  This Fixlet
+		  will download and
+		  update
+
+		  "OracleJDK v11.0.24" onto selected endpoints.
+		  <br /><br /><b>Download Size:</b> 145415392
+
+		  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+		</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual backup of System Preferences (if any).</li>		<li>This content requires manual caching on the root server.</li>		</ul>
+]]></Description>
+		<Relevance><![CDATA[exists debianpackages]]></Relevance>
+		<Relevance><![CDATA[exists versions whose(it as string starts with "11") of packages whose(name of it starts with "jdk") of debianpackages]]></Relevance>
+		<Relevance><![CDATA[not exists (it as version) whose(it >= "11.0.24") of first matches (regex "[0-9]+(\.[0-9]+)+") of ((it as string) of packages whose (name of it starts with "jdk") of debianpackages)]]></Relevance>
+		<Category>Update</Category>
+		<DownloadSize>145415392</DownloadSize>
+		<Source>Oracle</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-07-22</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"11.0.24","size":145415392 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp Oracle</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:oracle:oraclejdk:11.0.24:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Mon, 22 Jul 2024 06:06:21 +0000</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded-id</Name>
+			<Value>7101402</Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-superseded_date</Name>
+			<Value>2024-07-22</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy  v11.0.24.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download: Manual Caching Required!
+prefetch jdk-11.0.24_linux-x64_bin.deb sha1:4fe79e1e2c8b665c22470096ef496749293b5399 size:145415392 https://localhost:52311/Uploads/4fe79e1e2c8b665c22470096ef496749293b5399/jdk-11.0.24_linux-x64_bin.deb sha256:76ceea9fc78a95592ceecb43e0fd937474f47575a406f7ebdd9f7f6e3d8e53a5
+
+wait /bin/bash -c "cd './__Download' && dpkg -i *.deb"
+
+
+// End]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

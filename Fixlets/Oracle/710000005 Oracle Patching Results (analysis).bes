@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Analysis>
+		<Title>Oracle Patching Results</Title>
+		<Description><![CDATA[<p>This analysis provides the following properties for troubleshooting Oracle patch prechecks and patching:</p><ul><li><b>Oracle Precheck Failures</b> - shows failed checks in the Precheck log</li><li><b>Oracle Patching Failures</b> - shows failed checks in the Patch log</li></ul>]]></Description>
+		<Relevance>exists file "SIDLIST.txt" of folder "ORACLE" of parent folder of data folder of client</Relevance>
+		<Source>Internal</Source>
+		<SourceReleaseDate>2022-10-10</SourceReleaseDate>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Wed, 26 Apr 2023 18:48:46 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<Property Name="Oracle Prechecks Failed" ID="2"><![CDATA[concatenation "; " of (following text of first " : " of it) of lines whose (it starts with "CHECK : " and it ends with "[FAIL]") of files whose (name of it starts with "PRECHECK-" and name of it ends with ".log") of folder (pathname of parent folder of data folder of client & "/ORACLE")]]></Property>
+		<Property Name="Oracle Patching Failed" ID="7"><![CDATA[concatenation "; " of (following text of first " : " of it) of lines whose (it starts with "CHECK : " and it ends with "[FAIL]") of files whose (name of it starts with "PATCH-" and name of it ends with ".log") of folder (pathname of parent folder of data folder of client & "/ORACLE")]]></Property>
+	</Analysis>
+</BES>

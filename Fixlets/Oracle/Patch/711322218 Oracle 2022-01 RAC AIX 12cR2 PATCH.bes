@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>RAC - OracleDB 12cR2 on AIX - 2022-01 Patch</Title>
+		<Description><![CDATA[<P><FONT color=#0000ff size=2>Oracle RAC 12.2.0.1 <STRONG>Patches</STRONG> for 2022-01</FONT></P>
+<P>This fixlet performs the following operations (if any of the operations fail, patching on that server will stop to let you fix the problem and re-run the fixlet):</P>
+<OL>
+<LI>Downloads the 33559966 combo patch and the 12.2.0.1.42 OPatch update, if they are not already present in the patch download folder.</LI>
+<LI>Runs the same prechecks as the Oracle 12.2.0.1 Precheck 2022-01 task, which includes updating OPatch to the current version 12.2.0.1.42.</LI>
+<LI>Applies the 33561275 OJVM binary patch.</LI>
+<LI>Applies the OJVM datapatch and checks that it has been applied.</LI>
+<LI>Applies the 33583921 PSU autopatch.</LI>
+<LI>Checks that the PSU datapatch has been applied.</LI>
+<LI>Performs some basic consistency postchecks.</LI>
+</OL>
+<P>THE 'UPDATE ORACLE ASM/RAC PATCH LIST' TASK MUST BE DEPLOYED PRIOR TO DEPLOYING THIS FIXLET.</P>
+<P>Failure exit codes:</P>
+<UL>
+<LI>100 = curl was not found so downloads cannot proceed</LI>
+<LI>101 = the OPatch update failed to download</LI>
+<LI>102 = the combo patch failed to download</LI>
+<LI>103 = space check failed prior to combo patch download</LI>
+<LI>104 = space check failed after combo patch download</LI>
+<LI>105 = the combo patch failed to unzip into /u01/mom_patch_software</LI>
+<LI>Other exit codes < 100: the exit code = the number of databases which failed the patching.</LI>
+</UL>
+<P><FONT color=#ff0000><STRONG>IMPORTANT:</STRONG> Check the properties in the <STRONG>Oracle Patch Results</STRONG> analysis to see specifics if the fixlet action fails. Detailed logs can be found in the /var/opt/BESClient/ORACLE folder.</FONT></P>]]></Description>
+		<Relevance>name of operating system starts with "AIX"</Relevance>
+		<Relevance>architecture of operating system starts with "ppc64"</Relevance>
+		<Relevance>exists file "SIDLIST.txt" whose (exists line whose (it does not start with "+ASM" and it contains ":12.2.0.1:") of it AND exists line whose (it starts with "+ASM" and it does not start with "+ASM:" and it contains ":12.2.0.1:") of it) of folder "ORACLE" of parent folder of data folder of client</Relevance>
+		<Relevance>exists file "PATCHLEVEL-12.2.0.1.txt" whose (not exists line whose (it >= "2022-01") of it) of folder "ORACLE" of parent folder of data folder of client</Relevance>
+		<Category>Database</Category>
+		<DownloadSize>2949539048</DownloadSize>
+		<Source>Oracle</Source>
+		<SourceID>p33559966</SourceID>
+		<SourceReleaseDate>2022-01-15</SourceReleaseDate>
+		<SourceSeverity>Critical</SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Sun, 31 Oct 2021 23:59:59 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+begin prefetch block
+parameter "ODIR"="{ pathname of folder "ORACLE" of parent folder of data folder of client }"
+parameter "USER"="{ preceding text of first " " of ((concatenation " " of (preceding text of first ":" of following text of first ":" of following text of first ":" of following text of first ":" of it) of lines whose (it does not start with "#" and it contains "12.2.0.1") of file "SIDLIST.txt" of folder (parameter "ODIR")) & " ") }"
+parameter "HOME"="{ preceding text of first " " of ((concatenation " " of (preceding text of first ":" of following text of first ":" of it) of lines whose (it does not start with "#" and it contains "12.2.0.1") of file "SIDLIST.txt" of folder (parameter "ODIR")) & " ") }"
+parameter "BASE"="{ (if it != "" then it else ((parameter "HOME") & "/PATCHING")) of ((value of setting "ORACLE_PATCH_FOLDER" of client)|"") }"
+if { ((value of setting "ORACLE_DOWNLOAD_CURL" of client)|"0") != "1" }
+  if { not exists files "p6880880_190000_AIX64-5L.zip" of folders (parameter "BASE") }
+    add prefetch item name=p6880880_190000_AIX64-5L.zip sha1=980f7a879321741b76ffe3f4726e439728f64296 sha256=25c3b11edf7d771f89626a35eaf93f1fefeacfa090c822015b086ccbc4e52ec3 size=176769223 url=http://LOCALHOST:52311/Uploads/ORACLE/2022-01/OPatch/p6880880_190000_AIX64-5L.zip
+    parameter "NEWOPATCH"="1"
+  else
+    parameter "NEWOPATCH"="0"
+  endif
+  if { (not exists folders "33559966" of folders (parameter "BASE")) AND (not exists files "p33559966_122010_AIX64-5L.zip" of folders (parameter "BASE")) }
+    add prefetch item name=p33559966_122010_AIX64-5L.zip sha1=402f40a4e595f7f09a7ee963534b9d615d058b9f sha256=27c59a45535bb3df6330523c29bf3ba3eb0cba5a7ff34af33f9e322fee259bae size=2772769825 url=http://LOCALHOST:52311/Uploads/ORACLE/2022-01/ASM/p33559966_122010_AIX64-5L.zip
+    parameter "NEWPATCH"="1"
+  else
+    parameter "NEWPATCH"="0"
+  endif
+else
+  parameter "NEWPATCH"="0"
+  parameter "NEWOPATCH"="0"
+endif
+end prefetch block
+
+if { not exists folder (parameter "BASE") }
+  folder create {parameter "BASE"}
+endif
+wait chown -R {parameter "USER"}:oinstall {parameter "BASE"}
+if { parameter "NEWPATCH" = "1" }
+  delete {parameter "BASE"}/p33559966_122010_AIX64-5L.zip
+  move __Download/p33559966_122010_AIX64-5L.zip {parameter "BASE"}/p33559966_122010_AIX64-5L.zip
+endif
+if { parameter "NEWOPATCH" = "1" }
+  delete {parameter "BASE"}/p6880880_190000_AIX64-5L.zip
+  move __Download/p6880880_190000_AIX64-5L.zip {parameter "BASE"}/p6880880_190000_AIX64-5L.zip
+endif
+
+// This snippet gets included in all the other scripts
+createfile until _EOF_
+GIPATCHES="33678030 33116894 26839277 33610989 33587128"
+DBPATCHES="33678030 33587128"
+PATCHFILE="p33559966_122010_AIX64-5L.zip"
+PATCHSIZE="2772769825"
+PATCHSHA1="402f40a4e595f7f09a7ee963534b9d615d058b9f"
+PATCHURL="{(preceding text of first "LOCALHOST" of it & host name of root server & following text of first "LOCALHOST" of it) of "http://LOCALHOST:52311/Uploads/ORACLE/2022-01/ASM/p33559966_122010_AIX64-5L.zip"}"
+PATCHID="33559966"
+PATCHPSU="33583921"
+PATCHJVM="33561275"
+OPATCHFILE="p6880880_190000_AIX64-5L.zip"
+OPATCHSIZE="176769223"
+OPATCHSHA1="980f7a879321741b76ffe3f4726e439728f64296"
+OPATCHURL="{(preceding text of first "LOCALHOST" of it & host name of root server & following text of first "LOCALHOST" of it) of "http://LOCALHOST:52311/Uploads/ORACLE/2022-01/OPatch/p6880880_190000_AIX64-5L.zip"}"
+OPATCHVER="12.2.0.1.42"
+BASEFOLDER="{parameter "BASE"}"
+OUTFOLDER="{parameter "ODIR"}"
+SKIP_PRECHECK="{ (value of setting "ORACLE_SKIP_PRECHECK" of client)|"0" }"
+ALLOW_CONFLICTS="{ (value of setting "ORACLE_ALLOW_CONFLICTS" of client)|"0" }"
+ALLOW_INVALIDS="{ (value of setting "ORACLE_ALLOW_INVALIDS" of client)|"0" }"
+ORACLE_BACKUP="{ (value of setting "ORACLE_BACKUP_FOLDER" of client)|"" }"
+_EOF_
+delete "{parameter "ODIR"}/INCLUDE-12.2.0.1.sh"
+move __createfile "{parameter "ODIR"}/INCLUDE-12.2.0.1.sh"
+wait chmod 755 "{parameter "ODIR"}/INCLUDE-12.2.0.1.sh"
+
+// Download the patch files using curl if configured
+if { ((value of setting "ORACLE_DOWNLOAD_CURL" of client)|"0") = "1" }
+  wait su {parameter "USER"} -c "export ORACLE_VER=12.2.0.1; {parameter "ODIR"}/DOWNLOAD.sh > {parameter "ODIR"}/DOWNLOAD-12.2.0.1.log 2>&1"
+  parameter "downloadcode"="{ exit code of action }"
+  wait bash -c "chmod 666 {parameter "ODIR"}/*.log"
+  if { parameter "downloadcode" != "0" }
+    exit {parameter "downloadcode"}
+  endif
+endif
+
+// Unzip the main patch file if needed
+if { not exists folders "33559966" of folders (parameter "BASE") }
+  wait bash -c "export ORACLE_VER=12.2.0.1; {parameter "ODIR"}/UNZIP.sh > {parameter "ODIR"}/UNZIP-12.2.0.1.log 2>&1"
+  parameter "unzipcode"="{ exit code of action }"
+  wait bash -c "chmod 666 {parameter "ODIR"}/*.log"
+  if { parameter "unzipcode" != "0" }
+    exit {parameter "unzipcode"}
+  endif
+endif
+
+// Run the script, save the exit code, and make the log accessible to the oracle user
+delete "{parameter "ODIR"}/PATCH-12.2.0.1.log"
+wait su {parameter "USER"} -c "touch {parameter "ODIR"}/PATCH-12.2.0.1.log; chmod 755 {parameter "ODIR"}/PATCH-12.2.0.1.log"
+parameter "NODE"="{ (preceding text of first "|" of (it & "|")) of concatenation "|" of (following text of first "+ASM" of preceding text of first ":" of it) of lines whose (it starts with "+ASM" and it does not start with "+ASM:" and it contains ":12.2.0.1:") of file "SIDLIST.txt" of folder (parameter "ODIR") }"
+wait bash -c "export ORACLE_VER=12.2.0.1; {parameter "ODIR"}/PATCHRAC.sh {parameter "NODE"} >> {parameter "ODIR"}/PATCH-12.2.0.1.log 2>&1"
+parameter "exitcode"="{ exit code of action }"
+wait bash -c "chmod 666 {parameter "ODIR"}/*.log"
+
+// Rotate the log and write the operation status to a file for reporting
+wait su {parameter "USER"} -c "{parameter "ODIR"}/LOGROTATE.sh 180 PATCH-12.2.0.1"
+wait su {parameter "USER"} -c "{parameter "ODIR"}/STATUS.sh 12.2.0.1 2022-01 PATCH {parameter "exitcode"}"
+wait bash -c "{parameter "ODIR"}/UPDATE.sh > {parameter "ODIR"}/UPDATE.log 2>&1"
+wait bash -c "chmod 666 {parameter "ODIR"}/*.log"
+
+// Set the action exit code and fail the action if the exit code isn't zero
+if { parameter "exitcode" != "0" }
+  exit {parameter "exitcode"}
+endif
+exit {parameter "exitcode"}
+]]></ActionScript>
+		</DefaultAction>
+	</Fixlet>
+</BES>

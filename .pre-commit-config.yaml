@@ -1,0 +1,164 @@
+---
+# run on only items staged in git:  pre-commit
+# automatically run on commit:      pre-commit install
+# check all files in repo:          pre-commit run --all-files
+# check all files + manual checks:  pre-commit run --all-files --hook-stage manual
+# update all pre-commit hooks:      pre-commit autoupdate
+# https://github.com/pre-commit/pre-commit-hooks
+repos:
+  - repo: meta
+    hooks:
+      # make sure all hooks run against at least one file
+      # - id: check-hooks-apply
+      # make sure any defined exclusion actually excludes something
+      - id: check-useless-excludes
+  - repo: https://github.com/jgstew/pre-commit-jgstew
+    rev: v1.1.5
+    hooks:
+      - id: git-clean
+      - id: verify-files-are-ascii
+        files: \.bes$
+      - id: validate-bes
+        files: \.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files DO NOT contain template var
+        files: \.bes$
+        args: ['--num-matches=0', '--re-pattern=%\S{3,}%']
+        exclude: ".+Update Oracle Patch List and update scripts.+bes"
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain valid CPE
+        files: \.bes$
+        args: ['--re-pattern=<MIMEField>\s*<Name>x-fixlet-cpe23-item-name<\/Name>\s*<Value>(<!\[CDATA\[){0,1}cpe:2.3:a:.+:.+:\d+(\.\d+|\.windows)+:\*:\*:\*:\*:\*:(\*|x64|x32):\*(]]>){0,1}<\/Value>\s*<\/MIMEField>']
+        exclude: Oracle Middleware Info - Universal.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain well formed action-ui-metadata
+        files: \.bes$
+        # --re-pattern for those that might have images:
+        # <Name>action-ui-metadata<\/Name>\s*<Value>\s*{\s*"version" *: *"\d+(\.\d+)+" *, *"size" *: *\d+ *(,"icon":"data:.+"){0,1}\s*}\s*<\/Value>
+        args: ['--re-pattern=(?m)<Name>action-ui-metadata<\/Name>\s*<Value>\s*{\s*"version" *: *"\d+(\.\d+)+" *, *"size" *: *\d+ *}\s*<\/Value>']
+        exclude: Oracle Middleware Info - Universal.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain well formed Title
+        files: \.bes$
+        args: ['--re-pattern=<Title>Update: .+ v\d+(\.\d+)+ - ']
+        exclude: Oracle Middleware Info - Universal.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain correct OS within Title
+        files: \.bes$
+        args: ['--re-pattern= - (Linux \(SystemD-based\)|RedHat \/ CentOS \/ OEL \d+ \(x64\)|RedHat \/ CentOS \d+ \(x64\)|SUSE \d+ \(x64\)|Ubuntu \d+.04 \(x64\)|AIX|Linux and Solaris|Linux Unix|Linux|RHEL Family|RHEL Family \(x64\)|Debian Family \(x64\))<\/Title>']
+        exclude: Oracle Middleware Info - Universal.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain Update Category
+        files: \.bes$
+        args: ['--re-pattern=<Category>Update<\/Category>']
+        exclude: Oracle Middleware Info - Universal.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain well formed Category,DownloadSize,Source,SourceID,SourceReleaseDate
+        files: \.bes$
+        args: ['--re-pattern=<Category>\S+.*\S+<\/Category>\s*<DownloadSize>\d+<\/DownloadSize>\s*<Source>\S+.*\S+<\/Source>\s*<SourceID>\S+.*\S+<\/SourceID>\s*<SourceReleaseDate>\d{4}-\d{2}-\d{2}<\/SourceReleaseDate>']
+        exclude: Oracle Middleware Info - Universal.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain well formed x-fixlet-modification-time
+        files: \.bes$
+        args: ['--re-pattern=(?m)<Name>x-fixlet-modification-time<\/Name>\s*<Value>\w{3}, \d{2} \w{3} \d{4} \d{2}:\d{2}:\d{2} [+-]\d{4}<\/Value>']
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain well-formed x-fixlet-superseded-id
+        files: \.bes$
+        args: ['--re-pattern=(?m)<Name>x-fixlet-superseded-id<\/Name>\s*<Value>\d+<\/Value>']
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain well-formed x-fixlet-superseded_date
+        files: \.bes$
+        args: ['--re-pattern=(?m)<Name>x-fixlet-superseded_date<\/Name>\s*<Value>\d{4}-\d{2}-\d{2}<\/Value>']
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain well formed SourceReleaseDate
+        files: \.bes$
+        args: ['--re-pattern=<SourceReleaseDate>20\d{2}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])</SourceReleaseDate>']
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain actionscript MIMEType is x-Fixlet-Windows-Shell
+        files: \.bes$
+        args: ['--re-pattern=<ActionScript\s+MIMEType="application\/x-Fixlet-Windows-Shell">']
+        exclude: Oracle Middleware Info - Universal.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain actionscript wrapped in CDATA tags
+        files: \.bes$
+        args: ['--re-pattern=<ActionScript\s+MIMEType="application\/x-Fixlet-Windows-Shell">\s*<!\[CDATA\[(\s|\S)+]]><\/ActionScript>']
+        exclude: Oracle Middleware Info - Universal.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files contain well formed prefetch
+        files: \.bes$
+        args: ['--re-pattern=(\nprefetch \S+ sha1:\S{40} size:\d+ https*:\/\/\S+ sha256:\S{64}\n|\n\s+add prefetch item name=\S+ sha1=\S{40} size=\d+ url=https*:\/\/\S+ sha256=\S{64}\n)']
+        exclude: Oracle Middleware Info - Universal.bes$
+      - id: verify-files-contain-pattern
+        name: Verify BES files DO NOT contain template var
+        files: \.bes$
+        args: ['--num-matches=0', '--re-pattern=%[a-zA-Z]{3,}%']
+      - id: verify-files-contain-pattern
+        name: Verify BES files DO NOT contain prefetch inside prefetch block
+        files: \.bes$
+        # note: this check is limited to the first item within the prefetch block:
+        args: ['--num-matches=0', '--re-pattern=(?m)begin prefetch block[\n\r\s]+prefetch']
+      - id: verify-files-contain-pattern
+        name: Verify BES files DO NOT contain root server
+        files: \.bes$
+        args: ['--num-matches=0', '--re-pattern=dlbigfixapp1v']
+      - id: regex-search-filter-replace
+        name: replace non-ascii vowels in Jan Sarenik
+        files: Update Oracle Patch List and update scripts.*\.bes$
+        args: ['--search=Ján Sáreník', '--filter=.+', '--replace=Jan Sarenik', '--overwrite']
+      - id: revert-missing-change
+        args: ['--change_regex=v[0-9]+(\.[0-9]+)* - .+</Title>$']
+        files: \.bes$
+      - id: revert-missing-change
+        name: revert-missing-change --auto-revert
+        args: ['--change_regex=v[0-9]+(\.[0-9]+)* - .+</Title>$', --auto-revert]
+        files: \.bes$
+        require_serial: True
+        stages: [manual]
+  - repo: https://github.com/mattlqx/pre-commit-search-and-replace
+    rev: v1.1.2
+    hooks:
+      - id: search-and-replace
+        files: \.bes$
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      # - id: check-xml
+      - id: end-of-file-fixer
+      # https://www.aleksandrhovhannisyan.com/blog/crlf-vs-lf-normalizing-line-endings-in-git/
+      # - id: mixed-line-ending
+      #   args: ['--fix=no']
+      - id: trailing-whitespace
+      #  args: [--markdown-linebreak-ext=md]
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: [--branch, main]
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.26.3
+    hooks:
+      - id: yamllint
+        args: [-c=.yamllint.yaml]
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: v5.10.1
+    hooks:
+      - id: isort
+  - repo: local
+    hooks:
+      - id: propagate-verify
+        name: Verify Propagation with BFPropTool
+        entry: CMD /C prop-verify.bat
+        language: system
+        pass_filenames: False
+        files: \.bes$
+  - repo: https://github.com/SubhiramGurlinka/pre-commit-subhi
+    rev: v1.0
+    hooks:
+      - id: verify-fixlet-id
+        name: verify fixlet id is valid
+        files: \.bes$

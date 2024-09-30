@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Update: Postgresql v16.3 - RedHat / CentOS / OEL 9 (x64)</Title>
+		<Description><![CDATA[
+				<div>
+				  This Fixlet
+				  will download and
+				  update
+
+				  "Postgresql v16.3" onto selected endpoints.
+				  <br /><br /><b>Download Size:</b> 1834885
+
+				  <br />This will either suppress the creation of desktop shortcuts or delete them if created by the action.
+				</div>				<br/>
+		<p><strong>Prerequisites:</strong>
+		<ul>
+		<li>Recommended: Create a manual database back up.</li>		</ul>
+						See Also: Postgresql vulnerabilities: <A HREF="https://www.postgresql.org/support/security/">https://www.postgresql.org/support/security/</A>
+]]></Description>
+		<Relevance>((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 9") of name of it AND architecture of it = "x86_64") of operating system) and (if exists property "in plugin portal context" then (not in plugin portal context) else true) and (if exists property "in proxy agent context" then (not in proxy agent context) else true)</Relevance>
+
+		<Relevance><![CDATA[exists package "postgresql16-server" of rpm]]></Relevance>
+
+				<Relevance><![CDATA[not exists package "postgresql16-server" whose (version of it >= "16.3-1PGDG.rhel9") of rpm]]></Relevance>
+						<Category>Update</Category>
+		<DownloadSize>1834885</DownloadSize>
+		<Source>Postgresql</Source>
+		<SourceID>BigFix</SourceID>
+		<SourceReleaseDate>2024-05-08</SourceReleaseDate>
+		<SANSID></SANSID>
+		<MIMEField>
+			<Name>action-ui-metadata</Name>
+			<Value>{ "version":"16.3","size":1834885 }
+</Value>
+		</MIMEField>
+		<MIMEField>
+					<Name>x-fixlet-domain_attributes</Name>
+					<Value>PatchManagement 3rdPartyApp Postgresql</Value>
+				</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-cpe23-item-name</Name>
+			<Value><![CDATA[cpe:2.3:a:postgresql:postgresql:16.3:*:*:*:*:*:*:*]]></Value>
+		</MIMEField>
+		<MIMEField>
+			<Name>x-fixlet-modification-time</Name>
+			<Value>Thu, 23 May 2024 22:33:00 +0000</Value>
+		</MIMEField>
+		<Domain>BESC</Domain>
+				<DefaultAction ID="Action1">
+			<Description>
+				<PreLink><![CDATA[Click ]]></PreLink>
+				<Link>here</Link>
+				<PostLink><![CDATA[ to deploy Postgresql v16.3.]]></PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[
+// Download:
+prefetch postgresql_3.rpm sha1:87d4e278fe633dd9ba76191bcf3e44c6dfa530a6 size:1834885 https://download.postgresql.org/pub/repos/yum/16/redhat/rhel-9-x86_64/postgresql16-16.3-1PGDG.rhel9.x86_64.rpm sha256:70ddc3687bda18ea371d24a3be27d5b283187d97a6f5d459bb4b7b41bb073159
+prefetch postgresql_1.rpm sha1:bf0f394c418ffc211c545fbbacae673a627081f6 size:7052678 https://download.postgresql.org/pub/repos/yum/16/redhat/rhel-9-x86_64/postgresql16-server-16.3-1PGDG.rhel9.x86_64.rpm sha256:a2d2ff1343d8f6e8531506fbed00738ddb94a1c091c24feb638e2f8724076da2
+prefetch postgresql_2.rpm sha1:77b4ca40149cdfcedf09ef26e39fa5340164f5ac size:340540 https://download.postgresql.org/pub/repos/yum/16/redhat/rhel-9-x86_64/postgresql16-libs-16.3-1PGDG.rhel9.x86_64.rpm sha256:18d52f64a31a7509e976bb15dd4acb3e3c0147d69123363be15b9a85986d66da
+
+prefetch InstallPackages.sh sha1:b185b3e17e8712abaf694e1d2f0ce542c4ffe20e size:6756 https://sync.bigfix.com/bfsites/patchingsupport_1109/InstallPackages.sh sha256:65a2e8c87bfd4209f78bf5b6f43b0edf936c40b7a86ffa708f137628f172f88e
+
+wait chmod 744 __Download/InstallPackages.sh
+
+parameter "Log_Dir" = "{client folder of current site}/../../EDRDeployData/"
+parameter "Fixlet_ID" = "{origin fixlet id of action as string}"
+
+
+if {((exists match (regex "(Rocky|AlmaLinux|(Oracle Enterprise|Oracle Enterprise Server)|CentOS|Red Hat Enterprise( [a-zA-Z]*)?) 9") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p yum -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/postgresql*rpm"
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "SuSE.* (9)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install RPM:
+wait /bin/bash "./__Download/InstallPackages.sh" -p zypper -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/postgresql*rpm"
+continue if {exit code of action = 0}
+
+elseif {((exists match (regex "Ubuntu( Server|)( LTS|) (999)") of name of it) AND (architecture of it = "x86_64")) of operating system}
+// Install DEB:
+wait /bin/bash "./__Download/InstallPackages.sh" -p apt -l "{parameter "Log_Dir"}" -f {parameter "Fixlet_ID"} "./__Download/postgresql*deb"
+continue if {exit code of action = 0}
+
+else
+
+// No Known Configuration
+continue if false
+
+endif
+
+// End]]></ActionScript>
+      <SuccessCriteria Option="OriginalRelevance"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>
